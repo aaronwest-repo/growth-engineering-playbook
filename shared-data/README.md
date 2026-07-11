@@ -21,16 +21,20 @@ shared-data/
     ├── campaigns-clean.csv     # canonical daily campaign metrics
     └── campaigns-messy.csv     # same rows with inconsistent UTM tagging
 └── content/
-    ├── faq.md
-    ├── returns-policy.md
-    ├── shipping-policy.md
-    ├── size-guide.md
-    ├── sustainability-policy.md
-    └── warranty-policy.md      # small RAG corpus for chatbot demos
+│   ├── faq.md
+│   ├── returns-policy.md
+│   ├── shipping-policy.md
+│   ├── size-guide.md
+│   ├── sustainability-policy.md
+│   └── warranty-policy.md      # small RAG corpus for chatbot demos
+└── events/
+    ├── affiliate-clicks.jsonl  # invented affiliate click log
+    ├── web-events.jsonl        # invented on-site touchpoints (view/cart/purchase)
+    └── conversions.jsonl       # invented orders with attribution/validation labels
 ```
 
-Customers, orders, events, and expanded feed samples are added by later use
-cases when they need them.
+Customers and expanded feed samples are added by later use cases when they need
+them.
 
 ## Regenerate
 
@@ -61,5 +65,8 @@ check and validation on every push and pull request.
 | `marketing/campaigns-clean.csv` | 232 rows | 9 campaigns × 28 days, canonical UTMs |
 | `marketing/campaigns-messy.csv` | 232 rows | same data with inconsistent UTM tagging |
 | `content/*.md` | 6 docs | FAQ, shipping, returns, warranty, size guide, sustainability policy |
+| `events/affiliate-clicks.jsonl` | 263 rows | invented affiliate clicks (5 publishers, incl. a suspicious one) |
+| `events/web-events.jsonl` | 943 rows | invented on-site touchpoints across channels |
+| `events/conversions.jsonl` | 206 rows | invented orders with attribution + validation labels |
 
 See [DATA_NOTES.md](DATA_NOTES.md) for the intentional messiness catalogue.

@@ -1,0 +1,13 @@
+{
+  "name": "affiliate-tracking-simulator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Clicks, cookies, attribution windows, deduplication, validation, and fraud patterns made visible — a deterministic affiliate tracking simulator.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/simulator.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

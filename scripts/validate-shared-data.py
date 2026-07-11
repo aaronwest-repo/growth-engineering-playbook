@@ -13,14 +13,16 @@ Stdlib only; no third-party dependencies.
 from __future__ import annotations
 
 import csv
+import json
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CATALOG = ROOT / "shared-data" / "catalog"
 MARKETING = ROOT / "shared-data" / "marketing"
 CONTENT = ROOT / "shared-data" / "content"
+EVENTS = ROOT / "shared-data" / "events"
 
 PRODUCT_COLUMNS = [
     "product_id", "parent_id", "sku", "title_en", "title_de", "brand",
@@ -194,6 +196,109 @@ def validate_messy_structure(path: Path, expected_cols: list[str],
         fail(f"{path.name}: {id_col}(s) not found in clean set: {sorted(unknown)}")
 
 
+EVENT_FILES = {
+    "affiliate-clicks.jsonl": ["click_id", "visitor_id", "session_id", "publisher_id",
+                               "publisher_name", "campaign_id", "clicked_at", "landing_url",
+                               "product_id", "cookie_set", "cookie_lost", "suspicious_flag"],
+    "web-events.jsonl": ["event_id", "visitor_id", "session_id", "event_type",
+                         "occurred_at", "product_id", "source", "medium", "campaign_id"],
+    "conversions.jsonl": ["order_id", "visitor_id", "session_id", "converted_at", "product_id",
+                          "order_value", "gross_margin", "claimed_click_id", "competing_channel",
+                          "returned", "validation_status", "validation_reason"],
+}
+
+
+def _parse_ts(value) -> bool:
+    try:
+        datetime.strptime(str(value), "%Y-%m-%dT%H:%M:%SZ")
+        return True
+    except (TypeError, ValueError):
+        return False
+
+
+def read_jsonl(path: Path) -> list[dict]:
+    rows = []
+    for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            rows.append(json.loads(line))
+        except json.JSONDecodeError as e:
+            fail(f"{path.name} line {i}: invalid JSON ({e})")
+    return rows
+
+
+def validate_events(product_ids: set[str], campaign_ids: set[str]) -> dict:
+    counts = {}
+    data = {}
+    for name, columns in EVENT_FILES.items():
+        path = EVENTS / name
+        if not path.exists():
+            fail(f"events/{name}: missing required event file")
+            data[name] = []
+            continue
+        rows = read_jsonl(path)
+        data[name] = rows
+        counts[name] = len(rows)
+        if not rows:
+            fail(f"events/{name}: no event rows")
+            continue
+        for i, r in enumerate(rows, start=1):
+            missing = [c for c in columns if c not in r]
+            if missing:
+                fail(f"events/{name} row {i}: missing keys {missing}")
+
+    clicks, web, convs = data["affiliate-clicks.jsonl"], data["web-events.jsonl"], data["conversions.jsonl"]
+
+    # Uniqueness of primary IDs.
+    def check_unique(rows, key, label):
+        seen, dupes = set(), set()
+        for r in rows:
+            v = r.get(key)
+            if v in seen:
+                dupes.add(v)
+            seen.add(v)
+        if dupes:
+            fail(f"{label}: duplicate {key}(s): {sorted(dupes)[:5]}")
+        return seen
+
+    click_ids = check_unique(clicks, "click_id", "affiliate-clicks.jsonl")
+    check_unique(web, "event_id", "web-events.jsonl")
+    check_unique(convs, "order_id", "conversions.jsonl")
+
+    known_visitors = {r.get("visitor_id") for r in clicks} | {r.get("visitor_id") for r in web}
+
+    # Product IDs must exist in the catalog; timestamps must parse.
+    for r in clicks:
+        if r.get("product_id") and r["product_id"] not in product_ids:
+            fail(f"affiliate-clicks.jsonl: unknown product_id {r['product_id']}")
+        if r.get("campaign_id") and r["campaign_id"] not in campaign_ids:
+            fail(f"affiliate-clicks.jsonl: unknown campaign_id {r['campaign_id']}")
+        if not _parse_ts(r.get("clicked_at")):
+            fail(f"affiliate-clicks.jsonl: unparseable clicked_at {r.get('clicked_at')!r}")
+
+    for r in web:
+        if r.get("product_id") and r["product_id"] not in product_ids:
+            fail(f"web-events.jsonl: unknown product_id {r['product_id']}")
+        if r.get("campaign_id") and r["campaign_id"] not in campaign_ids:
+            fail(f"web-events.jsonl: unknown campaign_id {r['campaign_id']}")
+        if not _parse_ts(r.get("occurred_at")):
+            fail(f"web-events.jsonl: unparseable occurred_at {r.get('occurred_at')!r}")
+
+    for r in convs:
+        if r.get("product_id") and r["product_id"] not in product_ids:
+            fail(f"conversions.jsonl: unknown product_id {r['product_id']}")
+        if not _parse_ts(r.get("converted_at")):
+            fail(f"conversions.jsonl: unparseable converted_at {r.get('converted_at')!r}")
+        claimed = r.get("claimed_click_id")
+        if claimed and claimed not in click_ids:
+            fail(f"conversions.jsonl: claimed_click_id {claimed} not found in affiliate clicks")
+        if r.get("visitor_id") and r["visitor_id"] not in known_visitors:
+            fail(f"conversions.jsonl: visitor_id {r['visitor_id']} has no click/web history")
+
+    return counts
+
+
 def validate_content_docs() -> None:
     for name in sorted(CONTENT_DOCS):
         path = CONTENT / name
@@ -216,11 +321,14 @@ def main() -> int:
     validate_messy_structure(MARKETING / "campaigns-messy.csv",
                              CAMPAIGN_COLUMNS, "campaign_id", campaign_ids)
     validate_content_docs()
+    event_counts = validate_events(product_ids, campaign_ids)
 
     print("Shared-data validation")
     print(f"  products-clean:   {len(product_ids)} products")
     print(f"  campaigns-clean:  {len(campaign_ids)} distinct campaign_ids")
     print(f"  content docs:     {len(CONTENT_DOCS)} documents")
+    for name, count in event_counts.items():
+        print(f"  events/{name}: {count} rows")
 
     if errors:
         print(f"\nFAILED with {len(errors)} error(s):")

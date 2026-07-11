@@ -100,10 +100,44 @@ The documents intentionally include boundaries a chatbot must respect:
 | Missing product facts | Say the corpus does not confirm the fact |
 | Out-of-corpus questions | Refuse or ask for a different product/support question |
 
+## Event corpus (`events/`)
+
+Deterministic affiliate event universe for the affiliate-tracking simulator
+(use case #6), generated from the same seed and tied to the catalog:
+
+- `affiliate-clicks.jsonl` — clicks from 5 invented publishers, incl. a
+  deliberately suspicious one (`ClickFarmX`) with click bursts and cookie
+  stuffing. Fields include `cookie_set`, `cookie_lost`, and `suspicious_flag`.
+- `web-events.jsonl` — on-site touchpoints (affiliate click, product view, add
+  to cart, checkout, purchase, competing campaign touches) across channels.
+- `conversions.jsonl` — orders with `claimed_click_id`, `competing_channel`,
+  `returned`, and a ground-truth `validation_status` + `validation_reason`.
+
+Scenarios deliberately baked in (so the simulator has something to decide):
+
+| Scenario | What it exercises |
+|----------|-------------------|
+| Varied click→conversion gaps (0–1 / 3–6 / 12–25 days) | Attribution-window control |
+| Cookie-loss journeys | Undercounted (untracked) affiliate revenue |
+| Conversions 34–55 days out | Outside-window rejection |
+| Affiliate + later paid-search touch | Cross-channel dedup under different rules |
+| Two publishers claiming one order | Duplicate-claim rejection |
+| Returned orders | Commission clawback |
+| ClickFarmX bursts + 40-second conversions | Fraud pattern flagging |
+| Organic/paid/direct conversions | Non-affiliate baseline |
+
+All IDs (visitor, session, click, order, publisher) are invented; timestamps
+are synthetic; there is no personal data. The demo's simulator recomputes
+attribution and validation from these raw facts — the stored
+`validation_status` is a ground-truth label, not the final rule-dependent verdict.
+
 ## Guarantees for downstream use cases
 
 - Clean files pass strict validation (`scripts/validate-shared-data.py`).
 - Content documents exist and contain enough text for retrieval demos.
+- Event files parse as JSONL with unique primary IDs, catalog-valid product IDs,
+  known campaign IDs, parseable timestamps, and conversions that reference real
+  click/visitor history.
 - Every messy `product_id` / `campaign_id` exists in the corresponding clean
   file, so messy → clean is always joinable.
 - No real personal data, secrets, or production identifiers anywhere.

@@ -21,8 +21,9 @@ Stdlib only; no third-party dependencies.
 from __future__ import annotations
 
 import csv
+import json
 import random
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 SEED = 42
@@ -31,6 +32,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CATALOG_DIR = ROOT / "shared-data" / "catalog"
 MARKETING_DIR = ROOT / "shared-data" / "marketing"
 CONTENT_DIR = ROOT / "shared-data" / "content"
+EVENTS_DIR = ROOT / "shared-data" / "events"
 
 CATEGORIES = [
     "Jackets",
@@ -494,24 +496,229 @@ def write_content_docs() -> None:
         (CONTENT_DIR / name).write_text(text.strip() + "\n", encoding="utf-8")
 
 
+# --- Events (affiliate tracking) -------------------------------------------
+
+AFFILIATE_CAMPAIGN_ID = "C009"  # the affiliate campaign in campaigns-clean.csv
+PUBLISHERS = [
+    ("PUB-01", "TrailNotes Blog"),
+    ("PUB-02", "GearDealFinder"),
+    ("PUB-03", "OutdoorMailer"),
+    ("PUB-04", "CashbackHub"),
+    ("PUB-05", "ClickFarmX"),  # deliberately suspicious publisher
+]
+EVENT_BASE = datetime(2025, 2, 1, 9, 0, 0)
+
+
+def _iso(dt: datetime) -> str:
+    return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def build_events(products: list[dict], rng: random.Random):
+    """Deterministic affiliate event universe over the Northstar catalog.
+
+    Emits raw clicks, web events, and conversions with ground-truth labels. The
+    demo's simulator applies attribution windows/rules, cookie-loss, and
+    validation modes on top of these raw facts. All IDs are invented; no
+    personal data.
+    """
+    price_by_id = {p["product_id"]: float(p["price"]) for p in products}
+    margin_by_id = {p["product_id"]: float(p["margin_rate"]) for p in products}
+    product_ids = list(price_by_id.keys())
+
+    clicks: list[dict] = []
+    web: list[dict] = []
+    convs: list[dict] = []
+    n = {"v": 0, "s": 0, "c": 0, "o": 0, "e": 0}
+
+    def nid(key: str, prefix: str, width: int) -> str:
+        n[key] += 1
+        return f"{prefix}{n[key]:0{width}d}"
+
+    def add_web(visitor, session, etype, dt, product, source, medium, campaign):
+        web.append({
+            "event_id": nid("e", "EVT-", 6), "visitor_id": visitor,
+            "session_id": session, "event_type": etype, "occurred_at": _iso(dt),
+            "product_id": product or "", "source": source, "medium": medium,
+            "campaign_id": campaign or "",
+        })
+
+    def add_click(visitor, session, publisher, dt, product, cookie_set, cookie_lost, suspicious):
+        cid = nid("c", "CLK-", 5)
+        clicks.append({
+            "click_id": cid, "visitor_id": visitor, "session_id": session,
+            "publisher_id": publisher[0], "publisher_name": publisher[1],
+            "campaign_id": AFFILIATE_CAMPAIGN_ID, "clicked_at": _iso(dt),
+            "landing_url": f"https://northstar-outfitters.example/p/{product}?aff={publisher[0]}&clk={cid}",
+            "product_id": product, "cookie_set": cookie_set, "cookie_lost": cookie_lost,
+            "suspicious_flag": suspicious,
+        })
+        return cid
+
+    def add_conv(visitor, session, dt, product, claimed_click_id, competing, returned, status, reason, qty=None):
+        value = round(price_by_id[product] * (qty if qty else rng.choice([1, 1, 1, 2])), 2)
+        gm = round(value * margin_by_id[product], 2)
+        convs.append({
+            "order_id": nid("o", "ORD-", 5), "visitor_id": visitor, "session_id": session,
+            "converted_at": _iso(dt), "product_id": product, "order_value": value,
+            "gross_margin": gm, "claimed_click_id": claimed_click_id,
+            "competing_channel": competing, "returned": returned,
+            "validation_status": status, "validation_reason": reason,
+        })
+
+    def dt_at(day, hour=None, minute=None):
+        return EVENT_BASE + timedelta(
+            days=day,
+            hours=rng.randint(0, 11) if hour is None else hour,
+            minutes=rng.randint(0, 59) if minute is None else minute,
+        )
+
+    good_pubs = PUBLISHERS[:4]
+
+    def affiliate_journey(gap_days, *, cookie_lost=False, competing="", returned=False,
+                          status="clean", reason="", pub=None, suspicious=False):
+        v = nid("v", "V-", 5)
+        s = nid("s", "S-", 6)
+        prod = rng.choice(product_ids)
+        publisher = pub or rng.choice(good_pubs)
+        ct = dt_at(rng.randint(0, 18))
+        cid = add_click(v, s, publisher, ct, prod, True, cookie_lost, suspicious)
+        add_web(v, s, "affiliate_click", ct, prod, "affiliate", "referral", AFFILIATE_CAMPAIGN_ID)
+        add_web(v, s, "product_view", ct + timedelta(minutes=1), prod, "affiliate", "referral", AFFILIATE_CAMPAIGN_ID)
+        add_web(v, s, "add_to_cart", ct + timedelta(minutes=6), prod, "affiliate", "referral", AFFILIATE_CAMPAIGN_ID)
+        convt = ct + timedelta(days=gap_days, hours=rng.randint(1, 8))
+        if competing:
+            # a later paid touch competes for the same order
+            add_web(v, nid("s", "S-", 6), "campaign_touch", convt - timedelta(hours=2),
+                    prod, competing, "cpc" if competing == "paid_search" else competing, "")
+        s2 = nid("s", "S-", 6)
+        add_web(v, s2, "checkout_start", convt - timedelta(minutes=8), prod, "affiliate", "referral", AFFILIATE_CAMPAIGN_ID)
+        add_web(v, s2, "purchase", convt, prod, "affiliate", "referral", AFFILIATE_CAMPAIGN_ID)
+        claimed = "" if cookie_lost else cid
+        add_conv(v, s2, convt, prod, claimed, competing, returned, status, reason)
+        return v, cid, prod, ct
+
+    # A. Valid affiliate conversions with varied click-to-conversion gaps
+    #    (drives the attribution-window control).
+    for lo, hi, count in ((0, 1, 22), (3, 6, 26), (12, 25, 16)):
+        for _ in range(count):
+            affiliate_journey(rng.randint(lo, hi), status="clean",
+                              reason="Single affiliate click within window.")
+
+    # B. Cookie-loss journeys: affiliate-influenced but tracking dropped.
+    for _ in range(30):
+        affiliate_journey(rng.randint(1, 8), cookie_lost=True, status="cookie_lost",
+                          reason="Affiliate cookie lost before conversion; sale not tracked to publisher.")
+
+    # C. Conversions outside a 30-day window.
+    for _ in range(15):
+        affiliate_journey(rng.randint(34, 55), status="outside_window",
+                          reason="Conversion fell outside the attribution window.")
+
+    # D. Cross-channel: a later paid-search touch also claims the order.
+    for _ in range(24):
+        affiliate_journey(rng.randint(1, 9), competing="paid_search", status="cross_channel",
+                          reason="Paid search also claims this order; winner depends on the rule.")
+
+    # E. Returned affiliate orders.
+    for _ in range(18):
+        affiliate_journey(rng.randint(1, 6), returned=True, status="returned",
+                          reason="Order was returned; commission must be clawed back.")
+
+    # F. Duplicate claims: two affiliate publishers claim the same order.
+    for _ in range(12):
+        v = nid("v", "V-", 5)
+        s = nid("s", "S-", 6)
+        prod = rng.choice(product_ids)
+        p1, p2 = rng.sample(good_pubs, 2)
+        c1t = dt_at(rng.randint(0, 10))
+        cid1 = add_click(v, s, p1, c1t, prod, True, False, False)
+        c2t = c1t + timedelta(hours=rng.randint(2, 20))
+        cid2 = add_click(v, nid("s", "S-", 6), p2, c2t, prod, True, False, False)
+        add_web(v, s, "affiliate_click", c1t, prod, "affiliate", "referral", AFFILIATE_CAMPAIGN_ID)
+        add_web(v, s, "affiliate_click", c2t, prod, "affiliate", "referral", AFFILIATE_CAMPAIGN_ID)
+        convt = c2t + timedelta(days=rng.randint(0, 3), hours=rng.randint(1, 6))
+        s2 = nid("s", "S-", 6)
+        add_web(v, s2, "purchase", convt, prod, "affiliate", "referral", AFFILIATE_CAMPAIGN_ID)
+        add_conv(v, s2, convt, prod, cid2, "", False, "duplicate",
+                 f"Two publishers ({p1[1]} and {p2[1]}) claim this order; one claim is a duplicate.")
+
+    # G. Suspicious publisher (ClickFarmX): click bursts, poor session quality,
+    #    a few conversions with impossibly short click-to-convert timing.
+    clickfarm = PUBLISHERS[4]
+    for burst in range(8):
+        v = nid("v", "V-", 5)
+        base_day = rng.randint(0, 18)
+        for k in range(5):  # tight burst of clicks, cookie-stuffing style
+            s = nid("s", "S-", 6)
+            ct = dt_at(base_day, hour=3, minute=(k * 2) % 60)
+            add_click(v, s, clickfarm, ct, rng.choice(product_ids), True, False, True)
+        if burst % 3 == 0:  # a few odd conversions moments after a click
+            prod = rng.choice(product_ids)
+            s = nid("s", "S-", 6)
+            ct = dt_at(base_day, hour=3, minute=11)
+            cid = add_click(v, s, clickfarm, ct, prod, True, False, True)
+            convt = ct + timedelta(seconds=40)
+            add_web(v, s, "purchase", convt, prod, "affiliate", "referral", AFFILIATE_CAMPAIGN_ID)
+            add_conv(v, s, convt, prod, cid, "", False, "suspicious",
+                     "Conversion 40s after click from a flagged publisher; hold for review.")
+
+    # H. Affiliate clicks that never convert (normal browsing tail).
+    for _ in range(45):
+        v = nid("v", "V-", 5)
+        s = nid("s", "S-", 6)
+        prod = rng.choice(product_ids)
+        ct = dt_at(rng.randint(0, 25))
+        add_click(v, s, rng.choice(good_pubs), ct, prod, True, rng.random() < 0.15, False)
+        add_web(v, s, "product_view", ct + timedelta(minutes=1), prod, "affiliate", "referral", AFFILIATE_CAMPAIGN_ID)
+
+    # I. Non-affiliate conversions (organic / paid / direct, no affiliate click).
+    for _ in range(40):
+        v = nid("v", "V-", 5)
+        s = nid("s", "S-", 6)
+        prod = rng.choice(product_ids)
+        channel = rng.choice(["organic", "paid_search", "direct", "email"])
+        vt = dt_at(rng.randint(0, 25))
+        add_web(v, s, "product_view", vt, prod, channel, "cpc" if channel == "paid_search" else channel, "")
+        add_web(v, s, "purchase", vt + timedelta(minutes=rng.randint(3, 40)), prod, channel,
+                "cpc" if channel == "paid_search" else channel, "")
+        add_conv(v, s, vt + timedelta(minutes=45), prod, "", channel, False, "non_affiliate",
+                 "No affiliate click in the journey; not an affiliate sale.")
+
+    return clicks, web, convs
+
+
+def write_jsonl(path: Path, rows: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        for row in rows:
+            f.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
+
+
 def main() -> None:
     # Independent RNG streams keep each dataset stable if others change size.
     products = build_products(random.Random(SEED))
     products_messy = inject_product_mess(products, random.Random(SEED + 1))
     campaigns = build_campaigns(random.Random(SEED + 2))
     campaigns_messy = inject_campaign_mess(campaigns, random.Random(SEED + 3))
+    aff_clicks, web_events, conversions = build_events(products, random.Random(SEED + 4))
 
     write_csv(CATALOG_DIR / "products-clean.csv", PRODUCT_COLUMNS, products)
     write_csv(CATALOG_DIR / "products-messy.csv", PRODUCT_COLUMNS, products_messy)
     write_csv(MARKETING_DIR / "campaigns-clean.csv", CAMPAIGN_COLUMNS, campaigns)
     write_csv(MARKETING_DIR / "campaigns-messy.csv", CAMPAIGN_COLUMNS, campaigns_messy)
     write_content_docs()
+    write_jsonl(EVENTS_DIR / "affiliate-clicks.jsonl", aff_clicks)
+    write_jsonl(EVENTS_DIR / "web-events.jsonl", web_events)
+    write_jsonl(EVENTS_DIR / "conversions.jsonl", conversions)
 
-    print(f"products-clean.csv    {len(products):>4} rows")
-    print(f"products-messy.csv    {len(products_messy):>4} rows")
-    print(f"campaigns-clean.csv   {len(campaigns):>4} rows")
-    print(f"campaigns-messy.csv   {len(campaigns_messy):>4} rows")
-    print(f"content docs          {len(CONTENT_DOCS):>4} files")
+    print(f"products-clean.csv       {len(products):>4} rows")
+    print(f"products-messy.csv       {len(products_messy):>4} rows")
+    print(f"campaigns-clean.csv      {len(campaigns):>4} rows")
+    print(f"campaigns-messy.csv      {len(campaigns_messy):>4} rows")
+    print(f"content docs             {len(CONTENT_DOCS):>4} files")
+    print(f"affiliate-clicks.jsonl   {len(aff_clicks):>4} rows")
+    print(f"web-events.jsonl         {len(web_events):>4} rows")
+    print(f"conversions.jsonl        {len(conversions):>4} rows")
 
 
 if __name__ == "__main__":
