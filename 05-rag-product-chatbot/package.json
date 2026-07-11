@@ -1,0 +1,13 @@
+{
+  "name": "rag-product-chatbot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Inspectable RAG product chatbot with citations, refusal behavior, and intent routing.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/rag.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

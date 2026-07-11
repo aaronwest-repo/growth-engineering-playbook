@@ -30,6 +30,7 @@ CURRENCY = "EUR"
 ROOT = Path(__file__).resolve().parent.parent
 CATALOG_DIR = ROOT / "shared-data" / "catalog"
 MARKETING_DIR = ROOT / "shared-data" / "marketing"
+CONTENT_DIR = ROOT / "shared-data" / "content"
 
 CATEGORIES = [
     "Jackets",
@@ -387,6 +388,112 @@ def write_csv(path: Path, columns: list[str], rows: list[dict]) -> None:
         writer.writerows(rows)
 
 
+CONTENT_DOCS = {
+    "faq.md": """# Northstar Outfitters FAQ
+
+## Product advice
+
+Northstar Outfitters sells outdoor and travel gear for everyday hikes, city travel, and weekend trips. The catalog covers jackets, shoes, backpacks, outdoor accessories, base layers, reusable bottles, and travel gear.
+
+For wet weather, customers usually compare the Aurora Shell Jacket, Fjord Rain Jacket, and Ridgeline Insulated Jacket. The Aurora Shell Jacket is the more protective shell option in the sample catalog. The Fjord Rain Jacket is lighter and lower priced. The Ridgeline Insulated Jacket is warmer but heavier.
+
+For hiking footwear, the TrailForge Hiker is the sturdier option, the Cascade Trail Runner is lighter, and the Basecamp Approach Shoe sits between casual travel and light trail use.
+
+## Product identifiers
+
+Product answers should cite the SKU or product title when possible. If a GTIN or exact stock value is missing from the provided catalog, support agents should say they cannot confirm it from the available data.
+
+## Support boundaries
+
+The assistant can answer product, shipping, return, warranty, size, and sustainability questions from this corpus. It cannot check a real order, payment, account, or delivery status. Those questions should route to the order-status intent and ask for the official order lookup flow.
+""",
+    "shipping-policy.md": """# Shipping Policy
+
+## Delivery regions
+
+Northstar Outfitters ships to Germany, Austria, the Netherlands, Belgium, and Luxembourg in this sample store universe.
+
+## Delivery times
+
+Standard delivery to Germany is usually 2 to 4 business days after dispatch. Austria, the Netherlands, Belgium, and Luxembourg are usually 3 to 6 business days after dispatch. Delivery estimates are not guarantees.
+
+## Shipping cost
+
+Standard delivery is free for orders of 75 EUR or more. Orders below 75 EUR have a 4.90 EUR standard shipping fee. Express shipping is not part of this sample policy.
+
+## Tracking
+
+Tracking is sent by email after dispatch. The chatbot cannot retrieve live tracking data and should route order-status questions to the mocked order lookup intent.
+""",
+    "returns-policy.md": """# Returns Policy
+
+## Return window
+
+Customers can return unused products within 30 days of delivery. Products must be clean, complete, and in a resellable condition.
+
+## Exclusions
+
+Reusable bottles can only be returned unused. Worn shoes, washed base layers, and damaged packaging may require manual review.
+
+## Refund timing
+
+Refunds are processed after the returned product is inspected. The sample policy uses a normal processing time of 5 to 8 business days after warehouse receipt.
+
+## Exchanges
+
+Direct exchanges are not available in the sample policy. Customers should return the unwanted item and place a new order for the replacement size or color.
+""",
+    "warranty-policy.md": """# Warranty Policy
+
+## Coverage
+
+Northstar Outfitters products include a 2-year warranty for manufacturing defects in this sample store universe. Normal wear, accidental damage, misuse, and cosmetic wear are not covered.
+
+## Claim evidence
+
+Warranty questions should ask for the product, order reference, photos of the issue, and a short description. The chatbot should not promise approval.
+
+## Claim language
+
+The assistant must not say products are unbreakable, guaranteed for life, scientifically proven, or 100% waterproof forever. Those claims are not supported by this corpus.
+""",
+    "size-guide.md": """# Size Guide
+
+## Apparel
+
+Jackets and base layers use S, M, and L in the sample catalog. Customers between sizes should choose the larger size for layering and the smaller size for a closer fit.
+
+## Shoes
+
+Shoes use EU 41, EU 43, and EU 45 in the sample catalog. The TrailForge Hiker is the sturdiest hiking shoe. The Cascade Trail Runner is lighter. The Basecamp Approach Shoe is suited to travel and light trail use.
+
+## One-size products
+
+Backpacks, bottles, travel gear, and most accessories are listed as One Size. Fit questions for backpacks should consider volume in liters, intended use, and loaded weight.
+""",
+    "sustainability-policy.md": """# Sustainability Claims Policy
+
+## Materials
+
+Some products use recycled polyester, recycled nylon, organic cotton, merino wool, stainless steel, or tritan. The assistant can mention a material only when it appears in the product catalog.
+
+## Claim limits
+
+The assistant can say a product uses a listed material. It must not infer carbon neutrality, full circularity, plastic-free manufacturing, lifetime durability, or environmental certifications that are not present in the catalog or policy documents.
+
+## Careful wording
+
+Use qualified language such as "made with recycled polyester" rather than broad claims such as "eco-friendly" or "sustainable product" unless a specific certification is present in the source data.
+""",
+}
+
+
+def write_content_docs() -> None:
+    CONTENT_DIR.mkdir(parents=True, exist_ok=True)
+    for name, text in CONTENT_DOCS.items():
+        (CONTENT_DIR / name).write_text(text.strip() + "\n", encoding="utf-8")
+
+
 def main() -> None:
     # Independent RNG streams keep each dataset stable if others change size.
     products = build_products(random.Random(SEED))
@@ -398,11 +505,13 @@ def main() -> None:
     write_csv(CATALOG_DIR / "products-messy.csv", PRODUCT_COLUMNS, products_messy)
     write_csv(MARKETING_DIR / "campaigns-clean.csv", CAMPAIGN_COLUMNS, campaigns)
     write_csv(MARKETING_DIR / "campaigns-messy.csv", CAMPAIGN_COLUMNS, campaigns_messy)
+    write_content_docs()
 
     print(f"products-clean.csv    {len(products):>4} rows")
     print(f"products-messy.csv    {len(products_messy):>4} rows")
     print(f"campaigns-clean.csv   {len(campaigns):>4} rows")
     print(f"campaigns-messy.csv   {len(campaigns_messy):>4} rows")
+    print(f"content docs          {len(CONTENT_DOCS):>4} files")
 
 
 if __name__ == "__main__":

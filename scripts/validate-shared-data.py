@@ -20,6 +20,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CATALOG = ROOT / "shared-data" / "catalog"
 MARKETING = ROOT / "shared-data" / "marketing"
+CONTENT = ROOT / "shared-data" / "content"
 
 PRODUCT_COLUMNS = [
     "product_id", "parent_id", "sku", "title_en", "title_de", "brand",
@@ -41,6 +42,14 @@ CURRENCIES = {"EUR"}
 AVAILABILITY = {"in stock", "out of stock", "preorder"}
 DATE_MIN = date(2024, 1, 1)
 DATE_MAX = date(2027, 12, 31)
+CONTENT_DOCS = {
+    "faq.md",
+    "shipping-policy.md",
+    "returns-policy.md",
+    "warranty-policy.md",
+    "size-guide.md",
+    "sustainability-policy.md",
+}
 
 errors: list[str] = []
 
@@ -185,6 +194,19 @@ def validate_messy_structure(path: Path, expected_cols: list[str],
         fail(f"{path.name}: {id_col}(s) not found in clean set: {sorted(unknown)}")
 
 
+def validate_content_docs() -> None:
+    for name in sorted(CONTENT_DOCS):
+        path = CONTENT / name
+        if not path.exists():
+            fail(f"content/{name}: missing required RAG corpus document")
+            continue
+        text = path.read_text(encoding="utf-8")
+        if not text.startswith("# "):
+            fail(f"content/{name}: missing top-level markdown heading")
+        if len(text.split()) < 45:
+            fail(f"content/{name}: too short for useful retrieval")
+
+
 def main() -> int:
     product_ids = validate_products_clean(CATALOG / "products-clean.csv")
     campaign_ids = validate_campaigns_clean(MARKETING / "campaigns-clean.csv")
@@ -193,10 +215,12 @@ def main() -> int:
                              PRODUCT_COLUMNS, "product_id", product_ids)
     validate_messy_structure(MARKETING / "campaigns-messy.csv",
                              CAMPAIGN_COLUMNS, "campaign_id", campaign_ids)
+    validate_content_docs()
 
     print("Shared-data validation")
     print(f"  products-clean:   {len(product_ids)} products")
     print(f"  campaigns-clean:  {len(campaign_ids)} distinct campaign_ids")
+    print(f"  content docs:     {len(CONTENT_DOCS)} documents")
 
     if errors:
         print(f"\nFAILED with {len(errors)} error(s):")

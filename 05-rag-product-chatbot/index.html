@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RAG Product Chatbot - Northstar Outfitters</title>
+    <meta
+      name="description"
+      content="Inspectable RAG product chatbot with citations, refusal behavior, and intent routing."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Cpath d='M4 5.5h8M4 8h6M4 10.5h4' stroke='%234f9cf9' stroke-width='1.3' stroke-linecap='round'/%3E%3Cpath d='M11.5 10.5l1 1 2-2.3' stroke='%232fbf87' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1720;
+        --panel: #161f2b;
+        --panel-2: #1c2836;
+        --panel-3: #101821;
+        --border: #2a3949;
+        --text: #e7edf3;
+        --muted: #93a4b7;
+        --accent: #4f9cf9;
+        --good: #2fbf87;
+        --warn: #e0a83a;
+        --bad: #ec6a5e;
+        --radius: 12px;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(1100px 620px at 78% -12%, #20344a, transparent), var(--bg);
+        color: var(--text);
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap { max-width: 1120px; margin: 0 auto; padding: 48px 20px 64px; }
+      .eyebrow { text-transform: uppercase; letter-spacing: 0.14em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 700; }
+      h1 { font-size: clamp(30px, 4vw, 44px); line-height: 1.08; margin: 0 0 12px; letter-spacing: -0.02em; }
+      .lede { color: var(--muted); max-width: 76ch; margin: 0; font-size: 16px; }
+      h2 { font-size: 19px; margin: 0 0 6px; }
+      .section-sub { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
+      .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 22px 0 18px; color: var(--muted); font-size: 14px; }
+      .topbar strong { color: var(--text); font-variant-numeric: tabular-nums; }
+      .topbar span { color: var(--border); }
+
+      .demo-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) 360px; gap: 18px; align-items: start; }
+      @media (max-width: 900px) { .demo-grid { grid-template-columns: 1fr; } }
+      .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px; }
+
+      .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+      .examples button, .ask button {
+        border: 1px solid var(--border);
+        background: var(--panel-3);
+        color: var(--muted);
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .examples button[aria-pressed="true"], .ask button { background: var(--accent); border-color: var(--accent); color: #061728; }
+
+      .chat { display: grid; gap: 12px; min-height: 280px; }
+      .message { border-radius: 12px; padding: 14px 15px; border: 1px solid var(--border); }
+      .message span { display: block; color: var(--muted); font-size: 12px; font-weight: 800; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.04em; }
+      .message p { margin: 0; }
+      .message.user { background: #0b1219; }
+      .message.bot { background: var(--panel-2); border-left-width: 4px; }
+      .message.bot.good { border-left-color: var(--good); }
+      .message.bot.warn { border-left-color: var(--warn); }
+      .message.bot.bad { border-left-color: var(--bad); }
+
+      .citations { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+      .citations li { border: 1px solid var(--border); background: var(--panel-3); border-radius: 9px; padding: 7px 9px; font-size: 12px; }
+      .citations strong { display: block; color: var(--text); }
+      .citations span { display: block; text-transform: none; letter-spacing: 0; color: var(--muted); margin: 2px 0 0; font-weight: 600; }
+
+      .ask { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 14px; }
+      .ask input {
+        min-width: 0;
+        border: 1px solid var(--border);
+        background: #0b1219;
+        color: var(--text);
+        border-radius: 10px;
+        padding: 11px 13px;
+        font-size: 14px;
+      }
+      @media (max-width: 560px) { .ask { grid-template-columns: 1fr; } }
+
+      .route-card { border-left: 4px solid var(--muted); background: var(--panel-2); border-radius: 10px; padding: 12px; margin-bottom: 13px; }
+      .route-card.good { border-left-color: var(--good); }
+      .route-card.warn { border-left-color: var(--warn); }
+      .route-card.bad { border-left-color: var(--bad); }
+      .route-card b { display: block; margin-bottom: 4px; }
+      .route-card span { color: var(--muted); font-size: 13px; }
+      dl { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+      dl div { background: var(--panel); padding: 10px; }
+      dt { color: var(--muted); font-size: 12px; }
+      dd { margin: 2px 0 0; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+      .retrieval { display: grid; gap: 10px; margin-top: 18px; }
+      .chunk { background: var(--panel-3); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+      .chunk b { display: block; font-size: 13px; }
+      .chunk span { color: var(--muted); font-size: 12px; }
+      .chunk p { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
+
+      .architecture { margin-top: 18px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+      .step { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 13px; }
+      .step b { display: block; color: var(--accent); font-size: 12px; margin-bottom: 5px; }
+      .step span { color: var(--muted); font-size: 13px; }
+      @media (max-width: 920px) { .architecture { grid-template-columns: 1fr 1fr; } }
+      @media (max-width: 560px) { .architecture { grid-template-columns: 1fr; } }
+
+      .footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+      .footer a { color: var(--accent); }
+      code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: 0.9em; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Growth Engineering Playbook</p>
+        <h1>RAG that says "I don't know"</h1>
+        <p class="lede">
+          A product-support chatbot over the Northstar Outfitters catalog and policy corpus.
+          It shows retrieval, citations, refusal behavior, and intent routing without requiring
+          a model download or API key.
+        </p>
+      </header>
+
+      <div class="topbar" id="corpusStats">Loading corpus...</div>
+
+      <section class="demo-grid" aria-label="RAG chatbot demo">
+        <div class="panel">
+          <h2>Ask the assistant</h2>
+          <p class="section-sub">Try a grounded product question, a transactional handoff, or an out-of-corpus request.</p>
+          <div class="examples" id="examples"></div>
+          <div class="chat" id="chat"></div>
+          <form class="ask" id="askForm">
+            <input id="questionInput" aria-label="Question" placeholder="Ask about a product, return, shipping, warranty, or size..." />
+            <button type="submit">Ask</button>
+          </form>
+        </div>
+
+        <aside class="panel">
+          <h2>Router Decision</h2>
+          <p class="section-sub">The important part is visible: answer, route, or refuse.</p>
+          <div id="router"></div>
+        </aside>
+      </section>
+
+      <section class="panel retrieval" aria-labelledby="retrieval-title">
+        <div>
+          <h2 id="retrieval-title">Retrieved Context</h2>
+          <p class="section-sub">Chunks surfaced from product data and policy docs. This is what the answer is allowed to use.</p>
+        </div>
+        <div id="retrieval"></div>
+      </section>
+
+      <section class="architecture" aria-label="RAG workflow">
+        <div class="step"><b>01 Corpus</b><span>Products, FAQ, shipping, returns, warranty, size, and claims policy.</span></div>
+        <div class="step"><b>02 Retrieve</b><span>Lexical chunks with source-aware boosts for policy questions.</span></div>
+        <div class="step"><b>03 Route</b><span>Transactional order questions go to workflow intent, not generation.</span></div>
+        <div class="step"><b>04 Answer</b><span>Grounded responses include citations and avoid unsupported claims.</span></div>
+        <div class="step"><b>05 Refuse</b><span>Weak retrieval produces a clear "not enough information" response.</span></div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          Sample data is the fictional <strong>Northstar Outfitters</strong> catalog and content corpus from
+          <code>shared-data/</code>. Client-side only; no model, API key, or user data. Part of the
+          <a href="https://github.com/aaronwest-repo/growth-engineering-playbook">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

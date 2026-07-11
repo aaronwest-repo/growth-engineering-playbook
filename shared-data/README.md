@@ -8,7 +8,7 @@ Everything here is fictional. No real customers, orders, brands, employers,
 clients, or personal information. GTINs, URLs (`*.example`), and metrics are
 all invented.
 
-## What exists now (first scope: use cases #1 and #2)
+## What exists now
 
 ```text
 shared-data/
@@ -20,11 +20,17 @@ shared-data/
 └── marketing/
     ├── campaigns-clean.csv     # canonical daily campaign metrics
     └── campaigns-messy.csv     # same rows with inconsistent UTM tagging
+└── content/
+    ├── faq.md
+    ├── returns-policy.md
+    ├── shipping-policy.md
+    ├── size-guide.md
+    ├── sustainability-policy.md
+    └── warranty-policy.md      # small RAG corpus for chatbot demos
 ```
 
-Customers, orders, events, the RAG/chatbot corpus, and catalog feeds
-(`products.json`, Google Shopping XML, affiliate feed) are added before use
-cases #3 and #5.
+Customers, orders, events, and expanded feed samples are added by later use
+cases when they need them.
 
 ## Regenerate
 
@@ -54,5 +60,6 @@ check and validation on every push and pull request.
 | `catalog/products-messy.csv` | 46 products | injected catalog defects (see `DATA_NOTES.md`) |
 | `marketing/campaigns-clean.csv` | 232 rows | 9 campaigns × 28 days, canonical UTMs |
 | `marketing/campaigns-messy.csv` | 232 rows | same data with inconsistent UTM tagging |
+| `content/*.md` | 6 docs | FAQ, shipping, returns, warranty, size guide, sustainability policy |
 
 See [DATA_NOTES.md](DATA_NOTES.md) for the intentional messiness catalogue.

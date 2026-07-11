@@ -118,3 +118,19 @@ jobs:
       - name: Run generator smoke test
         working-directory: 04-product-description-generator
         run: node tests/generator.test.mjs
+
+  rag-product-chatbot:
+    name: 05-rag-product-chatbot smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run RAG chatbot smoke test
+        working-directory: 05-rag-product-chatbot
+        run: node tests/rag.test.mjs

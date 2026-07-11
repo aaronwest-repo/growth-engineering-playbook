@@ -77,9 +77,33 @@ The numeric columns are left untouched in the messy file, so a UTM-audit demo
 (#2) can show that normalizing the tagging recovers spend/revenue that would
 otherwise be split across inconsistent labels.
 
+## Content Corpus
+
+`content/*.md` is a compact support/product knowledge base for RAG and chatbot
+demos. It includes:
+
+- FAQ
+- Shipping policy
+- Returns policy
+- Warranty policy
+- Size guide
+- Sustainability claims policy
+
+The documents intentionally include boundaries a chatbot must respect:
+
+| Boundary | What the assistant should do |
+|----------|------------------------------|
+| Live order tracking | Route to an order-status intent; do not pretend to access real orders |
+| Delivery estimates | Answer from policy, but do not guarantee delivery dates |
+| Warranty approval | Explain evidence needed; do not promise approval |
+| Sustainability claims | Mention only listed materials; do not invent certifications |
+| Missing product facts | Say the corpus does not confirm the fact |
+| Out-of-corpus questions | Refuse or ask for a different product/support question |
+
 ## Guarantees for downstream use cases
 
 - Clean files pass strict validation (`scripts/validate-shared-data.py`).
+- Content documents exist and contain enough text for retrieval demos.
 - Every messy `product_id` / `campaign_id` exists in the corresponding clean
   file, so messy → clean is always joinable.
 - No real personal data, secrets, or production identifiers anywhere.
