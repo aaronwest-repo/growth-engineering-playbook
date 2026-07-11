@@ -54,6 +54,9 @@ flowchart LR
 
 ## Quickstart
 
+Live demo:
+[aaronwest-repo.github.io/growth-engineering-playbook/01-ab-test-analyzer](https://aaronwest-repo.github.io/growth-engineering-playbook/01-ab-test-analyzer/)
+
 No dependencies. Serve the folder over HTTP (ES modules don't load from
 `file://`) and open it:
 

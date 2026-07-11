@@ -18,7 +18,7 @@ Role signal: senior e-commerce / marketing technology work, focused on turning m
 
 | # | Demo | Status | What it demonstrates |
 |---|------|--------|----------------------|
-| 1 | [`ab-test-analyzer`](01-ab-test-analyzer) | Live | Why many A/B tests are inconclusive, and how to reason about power, confidence, and sample size |
+| 1 | [`ab-test-analyzer`](01-ab-test-analyzer) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/01-ab-test-analyzer/) | Why many A/B tests are inconclusive, and how to reason about power, confidence, and sample size |
 | 2 | `utm-audit-dashboard` | Planned | UTM hygiene, campaign-data cleanup, and profit-based marketing metrics |
 | 3 | `product-data-cleaner` | Planned | Catalog normalization, AI-assisted enrichment, confidence flags, and feed exports |
 | 4 | `product-description-generator` | Planned | AI product copy with brand voice, banned claims, length limits, and hallucination checks |
