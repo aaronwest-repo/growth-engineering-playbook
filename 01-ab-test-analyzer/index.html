@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A/B Test Analyzer — Northstar Outfitters</title>
+    <meta
+      name="description"
+      content="Paste your A/B test numbers and get an honest verdict: significance, power, minimum detectable effect, and how long you would actually need to run it."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Cpath d='M3 12 L6 6 L9 9 L13 3' fill='none' stroke='%234f9cf9' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <style>
+      /* Styles are inlined so the page renders correctly when opened directly
+         from disk (file://), served over HTTP, or embedded in a portfolio. */
+      :root {
+        --bg: #0f1720;
+        --panel: #161f2b;
+        --panel-2: #1c2836;
+        --border: #2a3949;
+        --text: #e7edf3;
+        --muted: #93a4b7;
+        --accent: #4f9cf9;
+        --win: #2fbf87;
+        --wait: #e0a83a;
+        --flat: #7d8ba0;
+        --bad: #ec6a5e;
+        --radius: 12px;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: radial-gradient(1200px 600px at 70% -10%, #1a2a3d, transparent),
+          var(--bg);
+        background-color: var(--bg);
+        color: var(--text);
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 48px 20px 64px;
+      }
+      .masthead {
+        margin-bottom: 28px;
+      }
+      .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-size: 12px;
+        color: var(--accent);
+        margin: 0 0 8px;
+        font-weight: 600;
+      }
+      h1 {
+        font-size: clamp(28px, 4vw, 40px);
+        line-height: 1.1;
+        margin: 0 0 12px;
+        letter-spacing: -0.02em;
+      }
+      .lede {
+        color: var(--muted);
+        max-width: 62ch;
+        margin: 0;
+        font-size: 16px;
+      }
+      .examples {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 24px;
+      }
+      .examples__label {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .examples__note {
+        flex-basis: 100%;
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .chip {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 7px 13px;
+        border-radius: 999px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s;
+      }
+      .chip:hover {
+        border-color: var(--accent);
+        background: #223247;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        align-items: start;
+      }
+      @media (max-width: 760px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 20px;
+      }
+      fieldset {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px 16px;
+        margin: 0 0 16px;
+      }
+      fieldset:last-child {
+        margin-bottom: 0;
+      }
+      legend {
+        padding: 0 8px;
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--accent);
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 12px;
+      }
+      label:last-child {
+        margin-bottom: 0;
+      }
+      input,
+      select {
+        display: block;
+        width: 100%;
+        margin-top: 5px;
+        padding: 9px 11px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+        font-size: 15px;
+        font-variant-numeric: tabular-nums;
+      }
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(79, 156, 249, 0.18);
+      }
+      .suffix {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .suffix input {
+        margin-top: 5px;
+      }
+      .rate {
+        margin: 8px 0 0;
+        font-size: 13px;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+      }
+      .verdict {
+        border-radius: 10px;
+        padding: 16px 18px;
+        margin-bottom: 18px;
+        border-left: 4px solid var(--flat);
+        background: var(--panel-2);
+      }
+      .verdict--neutral {
+        border-left-color: var(--flat);
+      }
+      .verdict--win {
+        border-left-color: var(--win);
+      }
+      .verdict--wait {
+        border-left-color: var(--wait);
+      }
+      .verdict--flat {
+        border-left-color: var(--flat);
+      }
+      .verdict__headline {
+        margin: 0 0 6px;
+        font-size: 18px;
+      }
+      .verdict__detail {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1px;
+        margin: 0;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .metric {
+        background: var(--panel);
+        padding: 12px 14px;
+      }
+      .metric dt {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+      .metric dd {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .peeking {
+        margin-top: 20px;
+      }
+      .peeking h2 {
+        margin: 0 0 8px;
+        font-size: 20px;
+      }
+      .peeking p {
+        color: var(--muted);
+        font-size: 14px;
+        margin: 0 0 16px;
+        max-width: 70ch;
+      }
+      .peeking__controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 14px;
+        margin-bottom: 18px;
+      }
+      .peeking__controls label {
+        margin-bottom: 0;
+        flex: 1 1 150px;
+      }
+      .btn {
+        background: var(--accent);
+        color: #05192f;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 18px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: filter 0.15s;
+      }
+      .btn:hover {
+        filter: brightness(1.08);
+      }
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: progress;
+      }
+      .peeking__bars {
+        display: grid;
+        gap: 14px;
+        margin-bottom: 12px;
+      }
+      .bar {
+        display: grid;
+        grid-template-columns: 220px 1fr 64px;
+        align-items: center;
+        gap: 12px;
+      }
+      @media (max-width: 620px) {
+        .bar {
+          grid-template-columns: 1fr;
+          gap: 4px;
+        }
+      }
+      .bar__label {
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .bar__track {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        height: 22px;
+        overflow: hidden;
+      }
+      .bar__fill {
+        height: 100%;
+        width: 0;
+        transition: width 0.5s ease;
+      }
+      .bar__fill--good {
+        background: var(--win);
+      }
+      .bar__fill--bad {
+        background: var(--bad);
+      }
+      .bar__value {
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+        text-align: right;
+      }
+      .peeking__caption {
+        color: var(--muted);
+        font-size: 13px;
+        margin: 0;
+      }
+      .footer {
+        margin-top: 36px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .footer a {
+        color: var(--accent);
+      }
+      code {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 1px 5px;
+        font-size: 0.9em;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="masthead">
+        <p class="eyebrow">Growth Engineering Playbook</p>
+        <h1>Why your A/B test is inconclusive</h1>
+        <p class="lede">
+          Paste your test numbers and get an honest verdict — statistical
+          significance, power, the effect you can actually detect, and how long
+          you'd really need to run it. No backend, nothing leaves your browser.
+        </p>
+      </header>
+
+      <section class="examples" aria-label="Example scenarios">
+        <span class="examples__label">Try an example:</span>
+        <button type="button" class="chip" data-example="underpowered">
+          Underpowered checkout test
+        </button>
+        <button type="button" class="chip" data-example="winner">
+          Clear winner
+        </button>
+        <button type="button" class="chip" data-example="flat">
+          Well-powered but flat
+        </button>
+        <p class="examples__note">
+          Numbers reflect the fictional Northstar Outfitters store used across
+          this playbook's <code>shared-data</code>.
+        </p>
+      </section>
+
+      <div class="grid">
+        <form id="inputs" class="panel inputs" autocomplete="off">
+          <fieldset class="variant">
+            <legend>Control (A)</legend>
+            <label>
+              Visitors
+              <input type="number" id="nA" min="1" step="1" value="4200" required />
+            </label>
+            <label>
+              Conversions
+              <input type="number" id="cA" min="0" step="1" value="210" required />
+            </label>
+            <p class="rate" id="rateA">Conversion rate: —</p>
+          </fieldset>
+
+          <fieldset class="variant">
+            <legend>Variant (B)</legend>
+            <label>
+              Visitors
+              <input type="number" id="nB" min="1" step="1" value="4200" required />
+            </label>
+            <label>
+              Conversions
+              <input type="number" id="cB" min="0" step="1" value="231" required />
+            </label>
+            <p class="rate" id="rateB">Conversion rate: —</p>
+          </fieldset>
+
+          <fieldset class="settings">
+            <legend>Assumptions</legend>
+            <label>
+              Confidence level
+              <select id="confLevel">
+                <option value="0.9">90%</option>
+                <option value="0.95" selected>95%</option>
+                <option value="0.99">99%</option>
+              </select>
+            </label>
+            <label>
+              Target power
+              <select id="power">
+                <option value="0.8" selected>80%</option>
+                <option value="0.9">90%</option>
+              </select>
+            </label>
+            <label>
+              Relative lift you care about (MDE)
+              <span class="suffix">
+                <input type="number" id="mde" min="1" step="1" value="10" /> %
+              </span>
+            </label>
+            <label>
+              Weekly traffic per variant
+              <input type="number" id="weekly" min="0" step="100" value="4200" />
+            </label>
+          </fieldset>
+        </form>
+
+        <section class="panel results" aria-live="polite">
+          <div id="verdict" class="verdict verdict--neutral">
+            <h2 class="verdict__headline">Enter your numbers</h2>
+            <p class="verdict__detail">
+              Results update as you type. This tool errs toward honesty: an
+              underpowered test is reported as "not enough evidence", not a win.
+            </p>
+          </div>
+
+          <dl class="metrics">
+            <div class="metric">
+              <dt>p-value (two-sided)</dt>
+              <dd id="mPValue">—</dd>
+            </div>
+            <div class="metric">
+              <dt>Observed absolute lift</dt>
+              <dd id="mDiff">—</dd>
+            </div>
+            <div class="metric">
+              <dt id="mCiLabel">95% CI for the difference</dt>
+              <dd id="mCi">—</dd>
+            </div>
+            <div class="metric">
+              <dt>Statistical power (observed)</dt>
+              <dd id="mPower">—</dd>
+            </div>
+            <div class="metric">
+              <dt>Required sample / variant</dt>
+              <dd id="mRequired">—</dd>
+            </div>
+            <div class="metric">
+              <dt>Time to significance</dt>
+              <dd id="mWeeks">—</dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+
+      <section class="panel peeking">
+        <h2>Peeking simulator</h2>
+        <p>
+          Why does "just checking" hurt? This runs many A/A experiments where
+          <strong>both variants have the same true rate</strong> — so every
+          "win" is a false positive. Testing once at the end holds the false
+          positive rate near your threshold. Peeking after every checkpoint and
+          stopping at the first significant result inflates it.
+        </p>
+        <div class="peeking__controls">
+          <label>
+            Checkpoints
+            <input type="number" id="peeks" min="1" max="50" step="1" value="10" />
+          </label>
+          <label>
+            Visitors / checkpoint / variant
+            <input type="number" id="perCheckpoint" min="20" step="10" value="200" />
+          </label>
+          <label>
+            Simulated experiments
+            <input type="number" id="trials" min="200" max="20000" step="100" value="2000" />
+          </label>
+          <button type="button" id="runSim" class="btn">Run simulation</button>
+        </div>
+        <div id="peekingResult" class="peeking__result" hidden>
+          <div class="peeking__bars">
+            <div class="bar">
+              <span class="bar__label">Test once at the end</span>
+              <div class="bar__track"><div class="bar__fill bar__fill--good" id="barFixed"></div></div>
+              <span class="bar__value" id="valFixed">—</span>
+            </div>
+            <div class="bar">
+              <span class="bar__label">Peek at every checkpoint</span>
+              <div class="bar__track"><div class="bar__fill bar__fill--bad" id="barSeq"></div></div>
+              <span class="bar__value" id="valSeq">—</span>
+            </div>
+          </div>
+          <p class="peeking__caption" id="peekingCaption"></p>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          Frequentist two-proportion analysis. Client-side only; your numbers
+          never leave the page. Part of the
+          <a href="../README.md">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

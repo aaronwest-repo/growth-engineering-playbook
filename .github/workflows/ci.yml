@@ -54,3 +54,19 @@ jobs:
 
       - name: Validate shared-data
         run: python scripts/validate-shared-data.py
+
+  ab-test-analyzer:
+    name: 01-ab-test-analyzer smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run statistics smoke test
+        working-directory: 01-ab-test-analyzer
+        run: node tests/stats.test.mjs

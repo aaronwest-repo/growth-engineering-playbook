@@ -1,0 +1,13 @@
+{
+  "name": "ab-test-analyzer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Single-page A/B test analyzer: significance, power, sample size, and an honest verdict.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/stats.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
