@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  skeleton:
+    name: Skeleton sanity checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify required files exist
+        run: |
+          test -f README.md
+          test -f CLAUDE.md
+
+      - name: Verify no .env files are committed
+        run: |
+          if git ls-files --error-unmatch '.env' '.env.*' 2>/dev/null; then
+            echo "Error: .env files must not be committed."
+            exit 1
+          fi
+          echo "No committed .env files found."
+
+      - name: Run skeleton check script
+        run: bash scripts/check-skeleton.sh

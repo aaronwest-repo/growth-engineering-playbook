@@ -1,0 +1,22 @@
+# Secrets
+.env
+.env.*
+
+# Dependencies
+node_modules/
+
+# Python
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Build output
+dist/
+build/
+
+# Coverage
+coverage/
+
+# OS
+.DS_Store
