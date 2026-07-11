@@ -74,6 +74,9 @@ python3 -m http.server 8000
 # then open http://localhost:8000/03-product-data-cleaner/
 ```
 
+**Live demo:**
+[aaronwest-repo.github.io/growth-engineering-playbook/03-product-data-cleaner](https://aaronwest-repo.github.io/growth-engineering-playbook/03-product-data-cleaner/)
+
 Or drag any product CSV onto the drop zone. The expected columns match the
 shared catalog:
 
