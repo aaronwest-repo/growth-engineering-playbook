@@ -22,7 +22,7 @@ Role signal: senior e-commerce / marketing technology work, focused on turning m
 | 2 | [`utm-audit-dashboard`](02-utm-audit-dashboard) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/02-utm-audit-dashboard/) | UTM hygiene, campaign-data cleanup, and profit-based marketing metrics |
 | 3 | [`product-data-cleaner`](03-product-data-cleaner) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/03-product-data-cleaner/) | Catalog normalization, AI-assisted enrichment, confidence flags, and feed exports |
 | 4 | [`product-description-generator`](04-product-description-generator) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/04-product-description-generator/) | AI product copy with brand voice, banned claims, length limits, and hallucination checks |
-| 5 | [`rag-product-chatbot`](05-rag-product-chatbot) | Demo-ready | RAG chatbot architecture with citations, refusal behavior, and intent routing |
+| 5 | [`rag-product-chatbot`](05-rag-product-chatbot) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/05-rag-product-chatbot/) | RAG chatbot architecture with citations, refusal behavior, and intent routing |
 | 6 | `affiliate-tracking-simulator` | Planned flagship | Click tracking, cookies, attribution, deduplication, validation, and fraud patterns |
 | 7 | `cart-recovery-automation` | Planned | Event-driven automation with queueing, retries, email templates, and human approval gates |
 | 8 | `static-commerce-stack` | Planned | Static-site deployment with S3-style storage, CDN invalidation, and cache trade-offs |

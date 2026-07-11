@@ -73,6 +73,9 @@ python3 -m http.server 8000
 # then open http://localhost:8000/05-rag-product-chatbot/
 ```
 
+**Live demo:**
+[aaronwest-repo.github.io/growth-engineering-playbook/05-rag-product-chatbot](https://aaronwest-repo.github.io/growth-engineering-playbook/05-rag-product-chatbot/)
+
 Run the smoke test:
 
 ```bash
