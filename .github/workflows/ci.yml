@@ -70,3 +70,19 @@ jobs:
       - name: Run statistics smoke test
         working-directory: 01-ab-test-analyzer
         run: node tests/stats.test.mjs
+
+  utm-audit-dashboard:
+    name: 02-utm-audit-dashboard smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run UTM audit smoke test
+        working-directory: 02-utm-audit-dashboard
+        run: node tests/audit.test.mjs

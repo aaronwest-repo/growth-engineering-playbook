@@ -1,0 +1,13 @@
+{
+  "name": "utm-audit-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Drop in a campaign CSV, get a UTM hygiene audit and a profit-based decision-metrics dashboard.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/audit.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
