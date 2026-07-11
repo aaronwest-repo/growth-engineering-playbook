@@ -205,7 +205,12 @@ EVENT_FILES = {
     "conversions.jsonl": ["order_id", "visitor_id", "session_id", "converted_at", "product_id",
                           "order_value", "gross_margin", "claimed_click_id", "competing_channel",
                           "returned", "validation_status", "validation_reason"],
+    "cart-events.jsonl": ["cart_id", "visitor_id", "customer_ref", "checkout_started_at", "items",
+                          "product_ids", "cart_value", "currency", "consent_status",
+                          "purchased_before_send", "recovers_if_emailed", "provider_error",
+                          "succeeds_on_attempt"],
 }
+CONSENT_STATUSES = {"subscribed", "unknown", "unsubscribed"}
 
 
 def _parse_ts(value) -> bool:
@@ -249,6 +254,7 @@ def validate_events(product_ids: set[str], campaign_ids: set[str]) -> dict:
                 fail(f"events/{name} row {i}: missing keys {missing}")
 
     clicks, web, convs = data["affiliate-clicks.jsonl"], data["web-events.jsonl"], data["conversions.jsonl"]
+    carts = data["cart-events.jsonl"]
 
     # Uniqueness of primary IDs.
     def check_unique(rows, key, label):
@@ -295,6 +301,25 @@ def validate_events(product_ids: set[str], campaign_ids: set[str]) -> dict:
             fail(f"conversions.jsonl: claimed_click_id {claimed} not found in affiliate clicks")
         if r.get("visitor_id") and r["visitor_id"] not in known_visitors:
             fail(f"conversions.jsonl: visitor_id {r['visitor_id']} has no click/web history")
+
+    # Cart events: abandoned-cart inputs for the recovery workflow.
+    check_unique(carts, "cart_id", "cart-events.jsonl")
+    for r in carts:
+        pids = r.get("product_ids")
+        if not isinstance(pids, list) or not pids:
+            fail(f"cart-events.jsonl: product_ids not a non-empty list for {r.get('cart_id')}")
+        else:
+            for pid in pids:
+                if pid not in product_ids:
+                    fail(f"cart-events.jsonl: unknown product_id {pid} in {r.get('cart_id')}")
+        if not isinstance(r.get("cart_value"), (int, float)) or r.get("cart_value", 0) <= 0:
+            fail(f"cart-events.jsonl: cart_value not positive for {r.get('cart_id')}")
+        if r.get("consent_status") not in CONSENT_STATUSES:
+            fail(f"cart-events.jsonl: bad consent_status {r.get('consent_status')!r}")
+        if not _parse_ts(r.get("checkout_started_at")):
+            fail(f"cart-events.jsonl: unparseable checkout_started_at for {r.get('cart_id')}")
+        if "@" in str(r.get("customer_ref", "")):
+            fail(f"cart-events.jsonl: customer_ref looks like an email for {r.get('cart_id')}")
 
     return counts
 

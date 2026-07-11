@@ -30,7 +30,8 @@ shared-data/
 └── events/
     ├── affiliate-clicks.jsonl  # invented affiliate click log
     ├── web-events.jsonl        # invented on-site touchpoints (view/cart/purchase)
-    └── conversions.jsonl       # invented orders with attribution/validation labels
+    ├── conversions.jsonl       # invented orders with attribution/validation labels
+    └── cart-events.jsonl       # invented abandoned carts for the recovery workflow
 ```
 
 Customers and expanded feed samples are added by later use cases when they need
@@ -68,5 +69,6 @@ check and validation on every push and pull request.
 | `events/affiliate-clicks.jsonl` | 263 rows | invented affiliate clicks (5 publishers, incl. a suspicious one) |
 | `events/web-events.jsonl` | 943 rows | invented on-site touchpoints across channels |
 | `events/conversions.jsonl` | 206 rows | invented orders with attribution + validation labels |
+| `events/cart-events.jsonl` | 120 rows | invented abandoned carts (consent, recover propensity, provider-error seed) |
 
 See [DATA_NOTES.md](DATA_NOTES.md) for the intentional messiness catalogue.

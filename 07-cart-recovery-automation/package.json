@@ -1,0 +1,13 @@
+{
+  "name": "cart-recovery-automation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Event-driven abandoned-cart recovery with suppression, wait states, retries, human approval, and operational alerts — made visible.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/automation.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

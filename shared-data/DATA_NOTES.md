@@ -131,6 +131,15 @@ are synthetic; there is no personal data. The demo's simulator recomputes
 attribution and validation from these raw facts — the stored
 `validation_status` is a ground-truth label, not the final rule-dependent verdict.
 
+`cart-events.jsonl` — 120 invented abandoned checkouts for the cart-recovery
+workflow (use case #7). Each cart carries `cart_value`, `product_ids` (catalog
+IDs), a `consent_status` (subscribed / unknown / unsubscribed), and workflow
+seeds: `purchased_before_send`, `recovers_if_emailed`, `provider_error`, and
+`succeeds_on_attempt`. `customer_ref` is a hashed-style token (e.g.
+`cust_647555ef`), never an email. The recovery engine computes eligibility,
+suppression, waits, sends, retries, and recovery live from these inputs — the
+email sends and automation runs are outputs, not stored data.
+
 ## Guarantees for downstream use cases
 
 - Clean files pass strict validation (`scripts/validate-shared-data.py`).

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cart Recovery Automation - Northstar Outfitters</title>
+    <meta
+      name="description"
+      content="Event-driven abandoned-cart recovery made visible: trigger events, suppression rules, wait states, retries, email rendering, human approval, and operational alerts."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Cpath d='M3 4h2l1.4 6.4a1 1 0 0 0 1 .8H12' fill='none' stroke='%234f9cf9' stroke-width='1.3' stroke-linecap='round'/%3E%3Ccircle cx='7' cy='13' r='1' fill='%232fbf87'/%3E%3Ccircle cx='11' cy='13' r='1' fill='%232fbf87'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1720; --panel: #161f2b; --panel-2: #1c2836; --border: #2a3949;
+        --text: #e7edf3; --muted: #93a4b7; --accent: #4f9cf9;
+        --good: #2fbf87; --warn: #e0a83a; --bad: #ec6a5e;
+        --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #1a2a3d, transparent), var(--bg); background-color: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 1080px; margin: 0 auto; padding: 48px 20px 64px; }
+      .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 600; }
+      h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.02em; }
+      .lede { color: var(--muted); max-width: 70ch; margin: 0; font-size: 16px; }
+      h2 { font-size: 19px; margin: 32px 0 4px; }
+      .section-sub { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
+      .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; }
+      .file { font-size: 14px; color: var(--muted); margin-top: 12px; } .file strong { color: #fff; }
+
+      .controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 22px 0 6px; }
+      @media (max-width: 820px) { .controls { grid-template-columns: repeat(2, 1fr); } }
+      .ctrl label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+      .seg { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+      .seg button { flex: 1; background: transparent; color: var(--muted); border: none; padding: 8px 6px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+      .seg button[aria-pressed="true"] { background: var(--accent); color: #05192f; }
+
+      .metrics { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 8px 0 4px; }
+      @media (max-width: 900px) { .metrics { grid-template-columns: repeat(4, 1fr); } }
+      @media (max-width: 520px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+      .metric { background: var(--panel); padding: 12px 12px; }
+      .metric dt { font-size: 11px; color: var(--muted); margin: 0 0 4px; }
+      .metric dd { margin: 0; font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .metric.good dd { color: var(--good); } .metric.bad dd { color: var(--bad); } .metric.warn dd { color: var(--warn); }
+
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+      @media (max-width: 820px) { .grid2 { grid-template-columns: 1fr; } }
+
+      .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+      .steps li { display: grid; grid-template-columns: 118px 14px 1fr; gap: 8px; align-items: baseline; font-size: 13px; }
+      .steps time { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }
+      .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); align-self: center; }
+      .dot.checkout_started { background: var(--muted); } .dot.cart_abandoned { background: var(--warn); }
+      .dot.recovered, .dot.email_sent { background: var(--good); } .dot.failed { background: var(--bad); }
+      .status-pill { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; }
+      .s-recovered, .s-sent { color: var(--good); background: rgba(47,191,135,.14); }
+      .s-suppressed { color: var(--muted); background: rgba(255,255,255,.05); }
+      .s-failed { color: var(--bad); background: rgba(236,106,94,.14); }
+      .s-held_for_approval { color: var(--warn); background: rgba(224,168,58,.14); }
+
+      .decision-row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+      .decision-row:last-child { border-bottom: none; }
+      .decision-row .c { font-weight: 700; font-variant-numeric: tabular-nums; }
+      .decision-row .d { color: var(--muted); font-size: 12px; }
+
+      /* Email preview */
+      .email { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+      .email .bar { background: var(--panel-2); padding: 8px 12px; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--border); }
+      .email .body { padding: 16px; }
+      .email .subject { font-size: 16px; font-weight: 700; margin: 0 0 3px; }
+      .email .preheader { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+      .email .items { list-style: none; margin: 0 0 14px; padding: 0; }
+      .email .items li { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding: 6px 0; font-size: 13px; }
+      .email .cta { display: inline-block; background: var(--accent); color: #05192f; font-weight: 700; padding: 8px 16px; border-radius: 8px; font-size: 13px; }
+      .email .total { font-weight: 700; margin-top: 8px; }
+
+      .retry-tl { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
+      .retry-tl li { display: flex; justify-content: space-between; }
+      .retry-tl .ok { color: var(--good); } .retry-tl .err { color: var(--bad); }
+      .alert { margin-top: 10px; padding: 10px 12px; border-left: 3px solid var(--warn); background: rgba(224,168,58,.08); font-size: 13px; border-radius: 6px; }
+
+      .approval-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+      .approval-row:last-child { border-bottom: none; }
+      .btn-approve { background: var(--good); color: #06231a; border: none; border-radius: 7px; padding: 5px 12px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+      .empty { color: var(--muted); font-size: 13px; }
+
+      .impact-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+      @media (max-width: 820px) { .impact-grid { grid-template-columns: repeat(2, 1fr); } }
+      .impact-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+      .impact-card .big { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; margin: 4px 0; }
+      .impact-card.saved .big { color: var(--good); } .impact-card.guard .big { color: var(--warn); } .impact-card.caught .big { color: var(--bad); }
+      .impact-card p { margin: 0; font-size: 12px; color: var(--muted); }
+
+      .footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+      .footer a { color: var(--accent); }
+      code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: .9em; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Growth Engineering Playbook</p>
+        <h1>The error notification is the workflow</h1>
+        <p class="lede">
+          An event-driven abandoned-cart recovery workflow, made inspectable. It
+          replays invented carts for the Northstar Outfitters store and shows the
+          parts that decide whether automation earns money or quietly loses it:
+          suppression, wait states, retries, failures, and human approval —
+          not just "send an email after two hours." Deterministic, no real sends.
+        </p>
+        <p class="file" id="fileInfo">Loading cart data…</p>
+      </header>
+
+      <div class="controls">
+        <div class="ctrl">
+          <label>Delay before first email</label>
+          <div class="seg" data-control="delayMinutes">
+            <button type="button" data-value="30">30 min</button>
+            <button type="button" data-value="120" aria-pressed="true">2 hours</button>
+            <button type="button" data-value="1440">24 hours</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Max retries</label>
+          <div class="seg" data-control="maxRetries">
+            <button type="button" data-value="0">0</button>
+            <button type="button" data-value="1">1</button>
+            <button type="button" data-value="3" aria-pressed="true">3</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Approval mode</label>
+          <div class="seg" data-control="approvalMode">
+            <button type="button" data-value="auto" aria-pressed="true">Auto-send</button>
+            <button type="button" data-value="human">Human approval</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Suppression</label>
+          <div class="seg" data-control="suppression">
+            <button type="button" data-value="basic" aria-pressed="true">Basic</button>
+            <button type="button" data-value="strict">Strict</button>
+          </div>
+        </div>
+      </div>
+
+      <dl class="metrics" id="metrics"></dl>
+
+      <div class="grid2">
+        <section>
+          <h2>Workflow Timeline</h2>
+          <p class="section-sub">One cart from checkout to outcome — decisions, waits, sends, and recovery.</p>
+          <div class="panel" id="timeline"></div>
+        </section>
+        <section>
+          <h2>Recovery Email Preview</h2>
+          <p class="section-sub">Rendered from cart + catalog data. Nothing is sent; the recipient is a hashed token.</p>
+          <div id="email"></div>
+        </section>
+      </div>
+
+      <div class="grid2">
+        <section>
+          <h2>Decision Log</h2>
+          <p class="section-sub">Every rule the workflow applied, and how often it fired.</p>
+          <div class="panel" id="decisions"></div>
+        </section>
+        <section>
+          <h2>Error &amp; Retry</h2>
+          <p class="section-sub">A failed provider call, its retry schedule, and the escalation. Failure is handled, not hidden.</p>
+          <div class="panel" id="errorRetry"></div>
+        </section>
+      </div>
+
+      <section>
+        <h2>Human Approval Queue</h2>
+        <p class="section-sub">High-value carts wait for a person under human-approval mode. Approve one to release it.</p>
+        <div class="panel" id="approval"></div>
+      </section>
+
+      <section>
+        <h2>Business Impact</h2>
+        <p class="section-sub">Recovery earned, bad sends avoided, and failures caught before silent loss.</p>
+        <div class="impact-grid" id="impact"></div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          Cart data is the fictional <strong>Northstar Outfitters</strong> store from this
+          playbook's <code>shared-data/events/</code>. Deterministic, client-side only — no
+          email provider, no real sends. Part of the
+          <a href="https://github.com/aaronwest-repo/growth-engineering-playbook" target="_blank" rel="noopener">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

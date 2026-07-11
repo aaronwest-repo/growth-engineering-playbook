@@ -687,6 +687,44 @@ def build_events(products: list[dict], rng: random.Random):
     return clicks, web, convs
 
 
+def build_cart_events(products: list[dict], rng: random.Random) -> list[dict]:
+    """Deterministic abandoned-cart universe for the cart-recovery workflow.
+
+    Each row is an abandoned checkout with the signals the automation engine
+    needs: consent, whether the shopper already bought, recover propensity, and
+    a provider-error seed for retry logic. Customer refs are hashed-style tokens,
+    never emails. The engine computes sends/retries/recovery live.
+    """
+    price_by_id = {p["product_id"]: float(p["price"]) for p in products}
+    ids = list(price_by_id.keys())
+    base = datetime(2025, 2, 10, 10, 0, 0)
+    carts = []
+    for i in range(120):
+        cart_id = f"CART-{i + 1:05d}"
+        item_ids = rng.sample(ids, rng.choice([1, 1, 2, 3]))
+        value = round(sum(price_by_id[p] for p in item_ids), 2)
+        started = base + timedelta(days=rng.randint(0, 20), hours=rng.randint(0, 12), minutes=rng.randint(0, 59))
+        r = rng.random()
+        consent = "subscribed" if r < 0.68 else ("unknown" if r < 0.88 else "unsubscribed")
+        provider_error = rng.random() < 0.16
+        carts.append({
+            "cart_id": cart_id,
+            "visitor_id": f"CV-{i + 1:05d}",
+            "customer_ref": "cust_" + format(rng.getrandbits(32), "08x"),
+            "checkout_started_at": _iso(started),
+            "items": len(item_ids),
+            "product_ids": item_ids,
+            "cart_value": value,
+            "currency": CURRENCY,
+            "consent_status": consent,
+            "purchased_before_send": rng.random() < 0.14,
+            "recovers_if_emailed": rng.random() < 0.40,
+            "provider_error": provider_error,
+            "succeeds_on_attempt": rng.choice([2, 2, 3, 4]) if provider_error else 1,
+        })
+    return carts
+
+
 def write_jsonl(path: Path, rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
@@ -701,6 +739,7 @@ def main() -> None:
     campaigns = build_campaigns(random.Random(SEED + 2))
     campaigns_messy = inject_campaign_mess(campaigns, random.Random(SEED + 3))
     aff_clicks, web_events, conversions = build_events(products, random.Random(SEED + 4))
+    cart_events = build_cart_events(products, random.Random(SEED + 5))
 
     write_csv(CATALOG_DIR / "products-clean.csv", PRODUCT_COLUMNS, products)
     write_csv(CATALOG_DIR / "products-messy.csv", PRODUCT_COLUMNS, products_messy)
@@ -710,6 +749,7 @@ def main() -> None:
     write_jsonl(EVENTS_DIR / "affiliate-clicks.jsonl", aff_clicks)
     write_jsonl(EVENTS_DIR / "web-events.jsonl", web_events)
     write_jsonl(EVENTS_DIR / "conversions.jsonl", conversions)
+    write_jsonl(EVENTS_DIR / "cart-events.jsonl", cart_events)
 
     print(f"products-clean.csv       {len(products):>4} rows")
     print(f"products-messy.csv       {len(products_messy):>4} rows")
@@ -719,6 +759,7 @@ def main() -> None:
     print(f"affiliate-clicks.jsonl   {len(aff_clicks):>4} rows")
     print(f"web-events.jsonl         {len(web_events):>4} rows")
     print(f"conversions.jsonl        {len(conversions):>4} rows")
+    print(f"cart-events.jsonl        {len(cart_events):>4} rows")
 
 
 if __name__ == "__main__":

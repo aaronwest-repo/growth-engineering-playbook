@@ -150,3 +150,19 @@ jobs:
       - name: Run affiliate simulator smoke test
         working-directory: 06-affiliate-tracking-simulator
         run: node tests/simulator.test.mjs
+
+  cart-recovery-automation:
+    name: 07-cart-recovery-automation smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run cart recovery smoke test
+        working-directory: 07-cart-recovery-automation
+        run: node tests/automation.test.mjs
