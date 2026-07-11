@@ -1,0 +1,233 @@
+date,campaign_id,source,medium,campaign,term,content,spend,clicks,sessions,orders,revenue,gross_margin,new_customers
+2025-01-01,C001,google,cpc,brand-search,northstar outfitters,text-ad,57.26,104,90,8,725.12,283.90,2
+2025-01-01,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,107.04,102,81,2,247.94,107.09,1
+2025-01-01,C003,google,cpc,shopping-all,,pla,224.05,361,322,10,881.11,402.48,6
+2025-01-01,C004,facebook,paid-social,retargeting-viewers,,carousel,82.18,171,135,3,249.87,93.87,1
+2025-01-01,C005,facebook,paid-social,prospecting-lookalike,,video,102.05,243,193,3,205.78,92.10,2
+2025-01-01,C006,instagram,paid-social,prospecting-lookalike,,story,98.78,194,152,1,72.37,35.34,1
+2025-01-01,C008,bing,cpc,generic-backpacks,backpack,text-ad,37.99,54,44,1,98.53,44.76,1
+2025-01-01,C009,affiliate,affiliate,partner-outdoorblog,,banner,194.47,749,589,19,2430.91,1097.51,11
+2025-01-02,C001,google,cpc,brand-search,northstar outfitters,text-ad,54.86,100,91,7,703.92,306.68,2
+2025-01-02,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,121.33,116,99,3,424.09,173.21,2
+2025-01-02,C003,google,cpc,shopping-all,,pla,208.77,337,308,8,661.28,258.72,4
+2025-01-02,C004,facebook,paid-social,retargeting-viewers,,carousel,68.16,142,128,3,245.48,122.56,1
+2025-01-02,C005,facebook,paid-social,prospecting-lookalike,,video,120.68,287,233,2,145.78,69.58,2
+2025-01-02,C006,instagram,paid-social,prospecting-lookalike,,story,84.27,165,130,1,64.75,28.96,1
+2025-01-02,C007,newsletter,email,weekly-newsletter,,header-link,12.00,544,480,24,2582.42,1035.85,2
+2025-01-02,C008,bing,cpc,generic-backpacks,backpack,text-ad,48.27,69,57,1,104.60,47.73,1
+2025-01-02,C009,affiliate,affiliate,partner-outdoorblog,,banner,155.64,554,507,17,1945.51,962.11,10
+2025-01-03,C001,google,cpc,brand-search,northstar outfitters,text-ad,52.88,96,76,6,642.95,285.44,2
+2025-01-03,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,143.24,136,117,3,386.09,160.78,2
+2025-01-03,C003,google,cpc,shopping-all,,pla,184.24,297,276,7,593.23,291.92,4
+2025-01-03,C004,facebook,paid-social,retargeting-viewers,,carousel,97.08,202,160,3,251.87,122.83,1
+2025-01-03,C005,facebook,paid-social,prospecting-lookalike,,video,102.97,245,226,3,215.26,93.57,2
+2025-01-03,C006,instagram,paid-social,prospecting-lookalike,,story,93.02,182,149,2,147.68,54.67,2
+2025-01-03,C008,bing,cpc,generic-backpacks,backpack,text-ad,39.86,57,48,1,122.68,48.46,1
+2025-01-03,C009,affiliate,affiliate,partner-outdoorblog,,banner,194.54,878,759,21,2431.80,1044.49,13
+2025-01-04,C001,google,cpc,brand-search,northstar outfitters,text-ad,72.28,131,104,9,980.21,446.65,2
+2025-01-04,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,161.19,154,130,4,573.20,261.46,2
+2025-01-04,C003,google,cpc,shopping-all,,pla,175.41,283,231,8,763.10,275.26,4
+2025-01-04,C004,facebook,paid-social,retargeting-viewers,,carousel,81.51,170,147,3,220.96,85.36,1
+2025-01-04,C005,facebook,paid-social,prospecting-lookalike,,video,98.52,235,188,2,151.75,68.19,2
+2025-01-04,C006,instagram,paid-social,prospecting-lookalike,,story,72.33,142,114,1,75.12,34.18,1
+2025-01-04,C008,bing,cpc,generic-backpacks,backpack,text-ad,49.25,70,58,1,105.81,47.76,1
+2025-01-04,C009,affiliate,affiliate,partner-outdoorblog,,banner,85.34,413,375,10,1066.75,395.27,6
+2025-01-05,C001,google,cpc,brand-search,northstar outfitters,text-ad,61.87,112,103,9,811.66,340.95,2
+2025-01-05,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,170.93,163,150,5,634.97,253.01,3
+2025-01-05,C003,google,cpc,shopping-all,,pla,148.41,239,196,6,580.39,262.57,3
+2025-01-05,C004,facebook,paid-social,retargeting-viewers,,carousel,75.24,157,127,3,266.06,113.38,1
+2025-01-05,C005,facebook,paid-social,prospecting-lookalike,,video,148.78,354,315,4,303.13,125.17,3
+2025-01-05,C006,instagram,paid-social,prospecting-lookalike,,story,78.30,154,140,1,67.33,32.13,1
+2025-01-05,C008,bing,cpc,generic-backpacks,backpack,text-ad,44.56,64,56,1,98.32,38.49,1
+2025-01-05,C009,affiliate,affiliate,partner-outdoorblog,,banner,114.33,426,351,12,1429.13,515.40,7
+2025-01-06,C001,google,cpc,brand-search,northstar outfitters,text-ad,69.08,126,104,7,711.98,322.56,2
+2025-01-06,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,127.70,122,109,4,520.04,223.40,2
+2025-01-06,C003,google,cpc,shopping-all,,pla,135.49,219,192,6,561.32,261.65,3
+2025-01-06,C004,facebook,paid-social,retargeting-viewers,,carousel,82.82,173,153,4,297.75,140.44,1
+2025-01-06,C005,facebook,paid-social,prospecting-lookalike,,video,128.52,306,285,3,221.06,84.60,2
+2025-01-06,C006,instagram,paid-social,prospecting-lookalike,,story,70.36,138,127,1,70.25,34.76,1
+2025-01-06,C008,bing,cpc,generic-backpacks,backpack,text-ad,34.93,50,39,1,112.26,53.50,1
+2025-01-06,C009,affiliate,affiliate,partner-outdoorblog,,banner,275.12,1155,962,26,3439.01,1494.80,16
+2025-01-07,C001,google,cpc,brand-search,northstar outfitters,text-ad,45.90,83,65,4,415.63,186.79,1
+2025-01-07,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,112.91,108,98,3,418.87,184.68,2
+2025-01-07,C003,google,cpc,shopping-all,,pla,174.07,281,250,8,796.75,352.73,4
+2025-01-07,C004,facebook,paid-social,retargeting-viewers,,carousel,97.78,204,189,5,408.12,153.36,1
+2025-01-07,C005,facebook,paid-social,prospecting-lookalike,,video,131.63,313,290,3,213.97,85.27,2
+2025-01-07,C006,instagram,paid-social,prospecting-lookalike,,story,69.29,136,124,1,65.42,28.23,1
+2025-01-07,C007,newsletter,email,weekly-newsletter,,header-link,12.00,421,342,12,1314.62,546.90,1
+2025-01-07,C008,bing,cpc,generic-backpacks,backpack,text-ad,34.06,49,40,1,112.56,47.25,1
+2025-01-07,C009,affiliate,affiliate,partner-outdoorblog,,banner,149.88,664,522,15,1873.52,815.46,9
+2025-01-08,C001,google,cpc,brand-search,northstar outfitters,text-ad,62.64,114,92,6,628.21,288.91,2
+2025-01-08,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,151.07,144,134,3,428.85,171.70,2
+2025-01-08,C003,google,cpc,shopping-all,,pla,188.91,305,282,9,834.55,415.81,5
+2025-01-08,C004,facebook,paid-social,retargeting-viewers,,carousel,89.55,187,153,4,337.67,136.96,1
+2025-01-08,C005,facebook,paid-social,prospecting-lookalike,,video,115.36,275,215,2,169.43,74.25,2
+2025-01-08,C006,instagram,paid-social,prospecting-lookalike,,story,91.13,179,147,2,152.87,73.76,2
+2025-01-08,C008,bing,cpc,generic-backpacks,backpack,text-ad,44.67,64,59,1,101.09,49.25,1
+2025-01-08,C009,affiliate,affiliate,partner-outdoorblog,,banner,272.23,1139,989,28,3402.86,1402.47,17
+2025-01-09,C001,google,cpc,brand-search,northstar outfitters,text-ad,47.34,86,68,4,432.29,176.71,1
+2025-01-09,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,106.58,102,86,3,419.18,204.54,2
+2025-01-09,C003,google,cpc,shopping-all,,pla,166.55,269,251,6,496.10,212.66,3
+2025-01-09,C004,facebook,paid-social,retargeting-viewers,,carousel,96.58,201,170,4,327.54,117.92,1
+2025-01-09,C005,facebook,paid-social,prospecting-lookalike,,video,122.86,293,259,3,210.12,94.57,2
+2025-01-09,C006,instagram,paid-social,prospecting-lookalike,,story,78.40,154,144,2,138.72,50.57,2
+2025-01-09,C007,newsletter,email,weekly-newsletter,,header-link,12.00,746,632,28,2631.74,1057.75,3
+2025-01-09,C008,bing,cpc,generic-backpacks,backpack,text-ad,42.98,61,55,1,114.31,47.22,1
+2025-01-09,C009,affiliate,affiliate,partner-outdoorblog,,banner,234.20,944,765,25,2927.46,1395.25,15
+2025-01-10,C001,google,cpc,brand-search,northstar outfitters,text-ad,45.62,83,69,5,467.26,193.70,1
+2025-01-10,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,145.38,138,113,4,512.81,234.19,2
+2025-01-10,C003,google,cpc,shopping-all,,pla,221.41,357,284,10,830.64,351.75,6
+2025-01-10,C004,facebook,paid-social,retargeting-viewers,,carousel,72.82,152,141,3,243.78,120.91,1
+2025-01-10,C005,facebook,paid-social,prospecting-lookalike,,video,107.03,255,202,2,134.89,50.95,2
+2025-01-10,C006,instagram,paid-social,prospecting-lookalike,,story,70.19,138,108,1,64.91,31.83,1
+2025-01-10,C008,bing,cpc,generic-backpacks,backpack,text-ad,45.23,65,51,1,103.63,50.09,1
+2025-01-10,C009,affiliate,affiliate,partner-outdoorblog,,banner,149.77,497,417,14,1872.09,926.84,8
+2025-01-11,C001,google,cpc,brand-search,northstar outfitters,text-ad,51.19,93,78,7,741.26,364.43,2
+2025-01-11,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,110.69,105,83,2,293.26,133.83,1
+2025-01-11,C003,google,cpc,shopping-all,,pla,172.37,278,247,8,780.43,312.38,4
+2025-01-11,C004,facebook,paid-social,retargeting-viewers,,carousel,101.34,211,170,4,309.12,125.89,1
+2025-01-11,C005,facebook,paid-social,prospecting-lookalike,,video,114.84,273,214,2,158.03,71.62,2
+2025-01-11,C006,instagram,paid-social,prospecting-lookalike,,story,86.33,169,144,1,78.00,38.83,1
+2025-01-11,C008,bing,cpc,generic-backpacks,backpack,text-ad,42.55,61,55,1,120.00,54.45,1
+2025-01-11,C009,affiliate,affiliate,partner-outdoorblog,,banner,307.62,1050,913,30,3845.31,1495.89,18
+2025-01-12,C001,google,cpc,brand-search,northstar outfitters,text-ad,47.15,86,78,6,520.82,190.88,2
+2025-01-12,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,134.58,128,113,3,425.21,173.56,2
+2025-01-12,C003,google,cpc,shopping-all,,pla,193.34,312,257,7,577.16,263.23,4
+2025-01-12,C004,facebook,paid-social,retargeting-viewers,,carousel,95.53,199,157,3,262.83,104.21,1
+2025-01-12,C005,facebook,paid-social,prospecting-lookalike,,video,157.84,376,352,4,276.64,103.60,3
+2025-01-12,C006,instagram,paid-social,prospecting-lookalike,,story,93.14,183,155,1,65.75,26.29,1
+2025-01-12,C008,bing,cpc,generic-backpacks,backpack,text-ad,39.33,56,44,1,98.76,39.54,1
+2025-01-12,C009,affiliate,affiliate,partner-outdoorblog,,banner,213.54,1000,906,24,2669.23,1192.71,14
+2025-01-13,C001,google,cpc,brand-search,northstar outfitters,text-ad,69.17,126,113,9,867.12,399.22,2
+2025-01-13,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,168.62,161,141,3,438.15,159.89,2
+2025-01-13,C003,google,cpc,shopping-all,,pla,135.98,219,181,5,502.70,232.77,3
+2025-01-13,C004,facebook,paid-social,retargeting-viewers,,carousel,87.08,181,158,3,266.60,119.04,1
+2025-01-13,C005,facebook,paid-social,prospecting-lookalike,,video,121.10,288,268,3,222.53,110.06,2
+2025-01-13,C006,instagram,paid-social,prospecting-lookalike,,story,62.29,122,112,1,72.55,35.05,1
+2025-01-13,C008,bing,cpc,generic-backpacks,backpack,text-ad,43.25,62,53,1,115.65,53.25,1
+2025-01-13,C009,affiliate,affiliate,partner-outdoorblog,,banner,122.70,527,485,14,1533.78,596.66,8
+2025-01-14,C001,google,cpc,brand-search,northstar outfitters,text-ad,48.76,89,71,5,522.23,239.03,1
+2025-01-14,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,172.96,165,155,5,735.36,358.64,3
+2025-01-14,C003,google,cpc,shopping-all,,pla,180.98,292,267,9,862.44,407.91,5
+2025-01-14,C004,facebook,paid-social,retargeting-viewers,,carousel,108.33,226,195,3,216.93,99.57,1
+2025-01-14,C005,facebook,paid-social,prospecting-lookalike,,video,136.98,326,298,3,245.17,122.32,2
+2025-01-14,C006,instagram,paid-social,prospecting-lookalike,,story,79.22,155,123,1,65.30,30.77,1
+2025-01-14,C007,newsletter,email,weekly-newsletter,,header-link,12.00,704,651,28,3158.60,1267.21,3
+2025-01-14,C008,bing,cpc,generic-backpacks,backpack,text-ad,50.01,71,57,1,107.89,52.26,1
+2025-01-14,C009,affiliate,affiliate,partner-outdoorblog,,banner,151.33,483,412,14,1891.60,802.93,8
+2025-01-15,C001,google,cpc,brand-search,northstar outfitters,text-ad,49.83,91,82,5,503.52,203.36,1
+2025-01-15,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,109.72,104,81,2,240.66,108.14,1
+2025-01-15,C003,google,cpc,shopping-all,,pla,202.11,326,292,9,836.85,402.81,5
+2025-01-15,C004,facebook,paid-social,retargeting-viewers,,carousel,81.68,170,149,3,253.70,126.75,1
+2025-01-15,C005,facebook,paid-social,prospecting-lookalike,,video,119.06,283,252,2,170.19,62.74,2
+2025-01-15,C006,instagram,paid-social,prospecting-lookalike,,story,70.01,137,116,1,73.48,27.32,1
+2025-01-15,C008,bing,cpc,generic-backpacks,backpack,text-ad,48.20,69,55,1,123.09,53.24,1
+2025-01-15,C009,affiliate,affiliate,partner-outdoorblog,,banner,133.66,591,487,13,1670.73,664.49,8
+2025-01-16,C001,google,cpc,brand-search,northstar outfitters,text-ad,65.08,118,102,9,850.85,306.56,2
+2025-01-16,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,149.88,143,124,3,403.65,153.83,2
+2025-01-16,C003,google,cpc,shopping-all,,pla,224.64,362,315,11,1024.16,455.68,6
+2025-01-16,C004,facebook,paid-social,retargeting-viewers,,carousel,105.97,221,173,3,252.30,102.45,1
+2025-01-16,C005,facebook,paid-social,prospecting-lookalike,,video,156.17,372,308,4,305.98,132.47,3
+2025-01-16,C006,instagram,paid-social,prospecting-lookalike,,story,94.44,185,173,2,139.67,60.75,2
+2025-01-16,C007,newsletter,email,weekly-newsletter,,header-link,12.00,1025,900,40,4200.41,1727.74,4
+2025-01-16,C008,bing,cpc,generic-backpacks,backpack,text-ad,38.28,55,47,1,99.34,39.21,1
+2025-01-16,C009,affiliate,affiliate,partner-outdoorblog,,banner,283.03,1014,870,30,3537.91,1360.46,18
+2025-01-17,C001,google,cpc,brand-search,northstar outfitters,text-ad,53.36,97,76,6,584.44,243.22,2
+2025-01-17,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,150.47,143,125,3,424.67,162.29,2
+2025-01-17,C003,google,cpc,shopping-all,,pla,194.66,314,265,9,879.67,376.43,5
+2025-01-17,C004,facebook,paid-social,retargeting-viewers,,carousel,72.06,150,133,2,144.93,56.30,0
+2025-01-17,C005,facebook,paid-social,prospecting-lookalike,,video,149.12,355,298,4,303.54,134.51,3
+2025-01-17,C006,instagram,paid-social,prospecting-lookalike,,story,60.41,118,110,1,65.31,28.64,1
+2025-01-17,C008,bing,cpc,generic-backpacks,backpack,text-ad,53.36,76,65,2,199.34,76.48,1
+2025-01-17,C009,affiliate,affiliate,partner-outdoorblog,,banner,86.32,431,379,9,1079.04,490.95,5
+2025-01-18,C001,google,cpc,brand-search,northstar outfitters,text-ad,49.46,90,85,7,731.03,336.78,2
+2025-01-18,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,144.56,138,116,3,426.05,175.11,2
+2025-01-18,C003,google,cpc,shopping-all,,pla,135.74,219,204,6,597.72,298.74,3
+2025-01-18,C004,facebook,paid-social,retargeting-viewers,,carousel,69.76,145,134,3,264.47,123.90,1
+2025-01-18,C005,facebook,paid-social,prospecting-lookalike,,video,115.24,274,249,2,166.59,73.76,2
+2025-01-18,C006,instagram,paid-social,prospecting-lookalike,,story,99.18,194,166,2,138.16,55.02,2
+2025-01-18,C008,bing,cpc,generic-backpacks,backpack,text-ad,34.62,49,44,1,108.46,39.98,1
+2025-01-18,C009,affiliate,affiliate,partner-outdoorblog,,banner,134.26,563,506,14,1678.30,806.18,8
+2025-01-19,C001,google,cpc,brand-search,northstar outfitters,text-ad,65.34,119,94,8,823.59,315.02,2
+2025-01-19,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,108.07,103,95,2,271.34,108.53,1
+2025-01-19,C003,google,cpc,shopping-all,,pla,201.63,325,276,9,892.77,335.09,5
+2025-01-19,C004,facebook,paid-social,retargeting-viewers,,carousel,84.27,176,158,4,352.42,146.33,1
+2025-01-19,C005,facebook,paid-social,prospecting-lookalike,,video,141.42,337,294,4,278.78,103.30,3
+2025-01-19,C006,instagram,paid-social,prospecting-lookalike,,story,66.88,131,109,1,74.81,29.90,1
+2025-01-19,C008,bing,cpc,generic-backpacks,backpack,text-ad,34.79,50,42,1,99.50,48.50,1
+2025-01-19,C009,affiliate,affiliate,partner-outdoorblog,,banner,270.22,888,744,26,3377.71,1532.82,16
+2025-01-20,C001,google,cpc,brand-search,northstar outfitters,text-ad,60.12,109,95,6,608.87,296.20,2
+2025-01-20,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,110.05,105,90,3,408.74,203.74,2
+2025-01-20,C003,google,cpc,shopping-all,,pla,187.17,302,258,7,599.83,289.75,4
+2025-01-20,C004,facebook,paid-social,retargeting-viewers,,carousel,95.59,199,179,4,355.12,172.11,1
+2025-01-20,C005,facebook,paid-social,prospecting-lookalike,,video,161.02,383,355,4,304.56,111.39,3
+2025-01-20,C006,instagram,paid-social,prospecting-lookalike,,story,97.53,191,164,2,140.62,65.47,2
+2025-01-20,C008,bing,cpc,generic-backpacks,backpack,text-ad,51.08,73,60,1,108.16,40.83,1
+2025-01-20,C009,affiliate,affiliate,partner-outdoorblog,,banner,257.25,1084,916,24,3215.62,1236.85,14
+2025-01-21,C001,google,cpc,brand-search,northstar outfitters,text-ad,50.56,92,79,6,569.46,214.45,2
+2025-01-21,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,126.13,120,110,4,507.47,232.12,2
+2025-01-21,C003,google,cpc,shopping-all,,pla,205.99,332,303,8,639.06,237.62,4
+2025-01-21,C004,facebook,paid-social,retargeting-viewers,,carousel,92.92,194,158,4,303.92,128.55,1
+2025-01-21,C005,facebook,paid-social,prospecting-lookalike,,video,106.28,253,234,2,143.28,57.62,2
+2025-01-21,C006,instagram,paid-social,prospecting-lookalike,,story,68.12,134,106,1,65.48,26.34,1
+2025-01-21,C007,newsletter,email,weekly-newsletter,,header-link,12.00,840,723,38,3515.64,1734.52,4
+2025-01-21,C008,bing,cpc,generic-backpacks,backpack,text-ad,36.60,52,44,1,120.55,58.70,1
+2025-01-21,C009,affiliate,affiliate,partner-outdoorblog,,banner,118.84,520,435,12,1485.45,543.72,7
+2025-01-22,C001,google,cpc,brand-search,northstar outfitters,text-ad,62.39,113,88,6,597.56,237.06,2
+2025-01-22,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,155.29,148,133,4,534.44,223.19,2
+2025-01-22,C003,google,cpc,shopping-all,,pla,181.16,292,267,10,839.98,403.16,6
+2025-01-22,C004,facebook,paid-social,retargeting-viewers,,carousel,101.40,211,183,4,345.06,171.45,1
+2025-01-22,C005,facebook,paid-social,prospecting-lookalike,,video,131.17,312,245,3,210.73,79.17,2
+2025-01-22,C006,instagram,paid-social,prospecting-lookalike,,story,83.23,163,134,1,71.04,34.16,1
+2025-01-22,C008,bing,cpc,generic-backpacks,backpack,text-ad,35.15,50,47,1,98.33,39.18,1
+2025-01-22,C009,affiliate,affiliate,partner-outdoorblog,,banner,266.15,1049,828,28,3326.82,1400.21,17
+2025-01-23,C001,google,cpc,brand-search,northstar outfitters,text-ad,69.05,126,102,8,749.02,359.48,2
+2025-01-23,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,169.88,162,150,4,484.81,204.11,2
+2025-01-23,C003,google,cpc,shopping-all,,pla,146.60,236,193,6,574.76,253.01,3
+2025-01-23,C004,facebook,paid-social,retargeting-viewers,,carousel,112.46,234,211,5,416.87,171.31,1
+2025-01-23,C005,facebook,paid-social,prospecting-lookalike,,video,159.83,381,333,4,277.19,103.38,3
+2025-01-23,C006,instagram,paid-social,prospecting-lookalike,,story,60.17,118,95,1,70.43,32.37,1
+2025-01-23,C007,newsletter,email,weekly-newsletter,,header-link,12.00,697,593,28,3174.01,1579.99,3
+2025-01-23,C008,bing,cpc,generic-backpacks,backpack,text-ad,38.85,56,47,1,114.41,46.84,1
+2025-01-23,C009,affiliate,affiliate,partner-outdoorblog,,banner,310.55,1133,943,31,3881.92,1416.70,19
+2025-01-24,C001,google,cpc,brand-search,northstar outfitters,text-ad,52.89,96,83,7,768.63,298.70,2
+2025-01-24,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,109.29,104,95,3,366.34,152.28,2
+2025-01-24,C003,google,cpc,shopping-all,,pla,156.16,252,208,6,530.94,222.06,3
+2025-01-24,C004,facebook,paid-social,retargeting-viewers,,carousel,78.71,164,135,3,241.05,103.55,1
+2025-01-24,C005,facebook,paid-social,prospecting-lookalike,,video,107.99,257,220,3,212.10,80.96,2
+2025-01-24,C006,instagram,paid-social,prospecting-lookalike,,story,77.34,152,123,1,68.60,33.81,1
+2025-01-24,C008,bing,cpc,generic-backpacks,backpack,text-ad,48.64,69,59,1,109.30,48.74,1
+2025-01-24,C009,affiliate,affiliate,partner-outdoorblog,,banner,196.22,639,532,19,2452.77,1066.10,11
+2025-01-25,C001,google,cpc,brand-search,northstar outfitters,text-ad,65.06,118,98,6,632.96,256.28,2
+2025-01-25,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,141.82,135,124,4,542.76,236.10,2
+2025-01-25,C003,google,cpc,shopping-all,,pla,161.50,260,235,7,668.69,313.47,4
+2025-01-25,C004,facebook,paid-social,retargeting-viewers,,carousel,97.06,202,178,3,268.81,113.77,1
+2025-01-25,C005,facebook,paid-social,prospecting-lookalike,,video,158.98,379,322,4,293.27,122.03,3
+2025-01-25,C006,instagram,paid-social,prospecting-lookalike,,story,71.81,141,128,1,69.21,24.97,1
+2025-01-25,C008,bing,cpc,generic-backpacks,backpack,text-ad,53.22,76,59,1,104.36,47.92,1
+2025-01-25,C009,affiliate,affiliate,partner-outdoorblog,,banner,287.60,1043,953,29,3594.99,1567.50,17
+2025-01-26,C001,google,cpc,brand-search,northstar outfitters,text-ad,61.18,111,94,6,530.43,234.36,2
+2025-01-26,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,112.44,107,95,3,439.02,184.62,2
+2025-01-26,C003,google,cpc,shopping-all,,pla,172.00,277,230,7,659.41,317.37,4
+2025-01-26,C004,facebook,paid-social,retargeting-viewers,,carousel,77.51,161,147,4,323.36,140.38,1
+2025-01-26,C005,facebook,paid-social,prospecting-lookalike,,video,158.09,376,328,3,247.16,102.54,2
+2025-01-26,C006,instagram,paid-social,prospecting-lookalike,,story,67.08,132,119,1,80.38,33.37,1
+2025-01-26,C008,bing,cpc,generic-backpacks,backpack,text-ad,40.34,58,47,1,103.20,39.42,1
+2025-01-26,C009,affiliate,affiliate,partner-outdoorblog,,banner,340.68,974,915,33,4258.55,2033.12,20
+2025-01-27,C001,google,cpc,brand-search,northstar outfitters,text-ad,61.45,112,96,7,764.90,361.75,2
+2025-01-27,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,105.76,101,81,3,445.54,222.77,2
+2025-01-27,C003,google,cpc,shopping-all,,pla,160.72,259,222,8,675.54,294.41,4
+2025-01-27,C004,facebook,paid-social,retargeting-viewers,,carousel,72.84,152,122,2,171.29,62.02,0
+2025-01-27,C005,facebook,paid-social,prospecting-lookalike,,video,128.67,306,243,2,166.16,83.01,2
+2025-01-27,C006,instagram,paid-social,prospecting-lookalike,,story,64.76,127,104,1,68.26,27.47,1
+2025-01-27,C008,bing,cpc,generic-backpacks,backpack,text-ad,35.60,51,45,1,114.61,54.93,1
+2025-01-27,C009,affiliate,affiliate,partner-outdoorblog,,banner,261.76,1114,879,30,3272.00,1452.86,18
+2025-01-28,C001,google,cpc,brand-search,northstar outfitters,text-ad,66.89,122,103,9,905.77,444.91,2
+2025-01-28,C002,google,cpc,generic-hiking-jackets,hiking jacket,text-ad,124.75,119,103,3,380.39,174.77,2
+2025-01-28,C003,google,cpc,shopping-all,,pla,219.96,355,318,10,878.21,351.88,6
+2025-01-28,C004,facebook,paid-social,retargeting-viewers,,carousel,111.60,232,213,4,285.88,119.92,1
+2025-01-28,C005,facebook,paid-social,prospecting-lookalike,,video,156.84,373,304,4,330.58,134.40,3
+2025-01-28,C006,instagram,paid-social,prospecting-lookalike,,story,85.16,167,147,1,76.26,30.35,1
+2025-01-28,C007,newsletter,email,weekly-newsletter,,header-link,12.00,601,561,21,2042.56,910.88,2
+2025-01-28,C008,bing,cpc,generic-backpacks,backpack,text-ad,37.93,54,48,1,110.84,50.47,1
+2025-01-28,C009,affiliate,affiliate,partner-outdoorblog,,banner,206.44,939,880,24,2580.51,1033.66,14

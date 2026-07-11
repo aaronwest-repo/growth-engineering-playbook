@@ -28,3 +28,29 @@ jobs:
 
       - name: Run skeleton check script
         run: bash scripts/check-skeleton.sh
+
+  shared-data:
+    name: Shared-data validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verify shared-data is regenerable and unchanged
+        run: |
+          python scripts/generate-shared-data.py
+          if ! git diff --quiet -- shared-data/; then
+            echo "Error: committed shared-data differs from generator output."
+            echo "Run 'python scripts/generate-shared-data.py' and commit the result."
+            git --no-pager diff --stat -- shared-data/
+            exit 1
+          fi
+          echo "Committed shared-data matches the deterministic generator."
+
+      - name: Validate shared-data
+        run: python scripts/validate-shared-data.py
