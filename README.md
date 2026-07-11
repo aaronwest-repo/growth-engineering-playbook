@@ -24,7 +24,7 @@ Role signal: senior e-commerce / marketing technology work, focused on turning m
 | 4 | [`product-description-generator`](04-product-description-generator) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/04-product-description-generator/) | AI product copy with brand voice, banned claims, length limits, and hallucination checks |
 | 5 | [`rag-product-chatbot`](05-rag-product-chatbot) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/05-rag-product-chatbot/) | RAG chatbot architecture with citations, refusal behavior, and intent routing |
 | 6 | [`affiliate-tracking-simulator`](06-affiliate-tracking-simulator) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/06-affiliate-tracking-simulator/) (flagship) | Click tracking, cookies, attribution, deduplication, validation, and fraud patterns |
-| 7 | [`cart-recovery-automation`](07-cart-recovery-automation) | Demo-ready | Event-driven automation with queueing, retries, email templates, and human approval gates |
+| 7 | [`cart-recovery-automation`](07-cart-recovery-automation) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/07-cart-recovery-automation/) | Event-driven automation with queueing, retries, email templates, and human approval gates |
 | 8 | `static-commerce-stack` | Planned | Static-site deployment with S3-style storage, CDN invalidation, and cache trade-offs |
 
 ## Run Philosophy

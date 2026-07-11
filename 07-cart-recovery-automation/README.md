@@ -73,6 +73,9 @@ python3 -m http.server 8000
 # then open http://localhost:8000/07-cart-recovery-automation/
 ```
 
+**Live demo:**
+[aaronwest-repo.github.io/growth-engineering-playbook/07-cart-recovery-automation](https://aaronwest-repo.github.io/growth-engineering-playbook/07-cart-recovery-automation/)
+
 Run the smoke test:
 
 ```bash
