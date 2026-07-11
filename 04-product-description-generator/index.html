@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Description Generator - Northstar Outfitters</title>
+    <meta
+      name="description"
+      content="Structured product data in, brand-safe EN/DE product copy out — with guardrails: brand voice, banned-claim rules, length limits, and hallucination checks."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Cpath d='M4 5h8M4 8h8M4 11h5' stroke='%234f9cf9' stroke-width='1.4' stroke-linecap='round'/%3E%3Ccircle cx='12.5' cy='11' r='1.4' fill='%232fbf87'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1720; --panel: #161f2b; --panel-2: #1c2836; --border: #2a3949;
+        --text: #e7edf3; --muted: #93a4b7; --accent: #4f9cf9;
+        --good: #2fbf87; --warn: #e0a83a; --bad: #ec6a5e;
+        --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #1a2a3d, transparent), var(--bg); background-color: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 1040px; margin: 0 auto; padding: 48px 20px 64px; }
+      .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 600; }
+      h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.02em; }
+      .lede { color: var(--muted); max-width: 68ch; margin: 0; font-size: 16px; }
+      h2 { font-size: 20px; margin: 32px 0 4px; }
+      .section-sub { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+      .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px; }
+
+      .controls { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: flex-end; margin: 24px 0 8px; }
+      .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+      select { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 9px 12px; font-size: 15px; min-width: 300px; }
+      select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,156,249,.18); }
+      .voice { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+      .voice button { background: transparent; color: var(--muted); border: none; padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer; }
+      .voice button[aria-pressed="true"] { background: var(--accent); color: #05192f; }
+
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+      @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+
+      dl.facts { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 7px 14px; font-size: 14px; }
+      dl.facts dt { color: var(--muted); }
+      dl.facts dd { margin: 0; font-variant-numeric: tabular-nums; }
+      dl.facts dd.empty { color: var(--warn); font-style: italic; }
+
+      .rep-group { margin-bottom: 14px; }
+      .rep-group:last-child { margin-bottom: 0; }
+      .rep-h { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 6px; }
+      .rep-item { display: flex; gap: 9px; align-items: flex-start; font-size: 13.5px; padding: 3px 0; }
+      .rep-item .ic { width: 16px; flex: none; text-align: center; font-weight: 700; }
+      .ok .ic { color: var(--good); } .warn .ic { color: var(--warn); } .bad .ic { color: var(--bad); }
+      .claim-chip { display: inline-block; font-size: 12px; padding: 2px 9px; border-radius: 999px; background: rgba(236,106,94,.14); color: var(--bad); border: 1px solid rgba(236,106,94,.4); margin: 0 5px 5px 0; text-decoration: line-through; }
+
+      .out-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      @media (max-width: 760px) { .out-grid { grid-template-columns: 1fr; } }
+      .out { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+      .out h3 { margin: 0 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
+      .out .len { color: var(--muted); font-size: 11px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+      .out p, .out ul { margin: 6px 0 0; font-size: 14px; }
+      .out ul { padding-left: 18px; }
+      .copy-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; font-size: 11px; padding: 2px 8px; cursor: pointer; }
+      .copy-btn:hover { border-color: var(--accent); color: var(--text); }
+      .legacy { color: var(--muted); font-size: 13px; }
+      .legacy del { color: var(--bad); }
+
+      .why { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px; }
+      @media (max-width: 760px) { .why { grid-template-columns: repeat(2, 1fr); } }
+      .why div { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+      .why b { color: #fff; display: block; margin-bottom: 3px; font-size: 14px; }
+      .why span { color: var(--muted); font-size: 13px; }
+
+      .footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+      .footer a { color: var(--accent); }
+      code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: .9em; }
+      .file { font-size: 14px; color: var(--muted); }
+      .file strong { color: #fff; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Growth Engineering Playbook</p>
+        <h1>Structured data in, brand-safe copy out</h1>
+        <p class="lede">
+          A product-copy generator with guardrails. It turns catalog facts into
+          EN/DE descriptions, bullets, and meta fields under a chosen brand voice —
+          then checks its own output for banned claims, invented attributes, and
+          length limits. Deterministic demo, no live model required.
+        </p>
+        <p class="file" id="fileInfo" style="margin-top:14px">Loading sample catalog…</p>
+      </header>
+
+      <div class="controls">
+        <div class="field">
+          <label for="productSelect">Product</label>
+          <select id="productSelect"></select>
+        </div>
+        <div class="field">
+          <label>Brand voice</label>
+          <div class="voice" role="group" aria-label="Brand voice profile">
+            <button type="button" data-profile="premium" aria-pressed="true">Premium</button>
+            <button type="button" data-profile="practical" aria-pressed="false">Practical</button>
+            <button type="button" data-profile="technical" aria-pressed="false">Technical</button>
+          </div>
+        </div>
+      </div>
+
+      <section aria-labelledby="io-title">
+        <h2 id="io-title">Product facts &amp; guardrail report</h2>
+        <p class="section-sub">Facts come first. The report is the generator checking its own output before you'd ever publish.</p>
+        <div class="grid2">
+          <div class="panel">
+            <div class="rep-h">Source facts (products-clean.csv)</div>
+            <dl class="facts" id="facts"></dl>
+          </div>
+          <div class="panel" id="report"></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="copy-title">
+        <h2 id="copy-title">Copy-ready output</h2>
+        <p class="section-sub">Generated from the facts above under the selected brand voice.</p>
+        <div class="out-grid" id="output"></div>
+      </section>
+
+      <section aria-labelledby="why-title">
+        <h2 id="why-title">Why this isn't generic AI copy</h2>
+        <div class="why">
+          <div><b>Facts first</b><span>Copy is assembled from catalog data. No attribute is mentioned unless it exists.</span></div>
+          <div><b>Brand voice second</b><span>Tone is a template layer on top of facts, not a source of new claims.</span></div>
+          <div><b>Guardrails always</b><span>Banned claims, length limits, and language integrity are checked every run.</span></div>
+          <div><b>Review before publish</b><span>Missing facts and flagged claims surface for a human, not silent auto-fill.</span></div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          Sample data is the fictional <strong>Northstar Outfitters</strong> store from this
+          playbook's <code>shared-data/</code>. Deterministic generation, client-side only — no
+          model or API key. Part of the
+          <a href="https://github.com/aaronwest-repo/growth-engineering-playbook" target="_blank" rel="noopener">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

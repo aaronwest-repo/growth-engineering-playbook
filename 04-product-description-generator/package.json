@@ -1,0 +1,13 @@
+{
+  "name": "product-description-generator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Structured product data in, brand-safe EN/DE product copy out — with guardrails. Deterministic demo of an LLM copy workflow.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/generator.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -102,3 +102,19 @@ jobs:
       - name: Run product cleaner smoke test
         working-directory: 03-product-data-cleaner
         run: node tests/cleaner.test.mjs
+
+  product-description-generator:
+    name: 04-product-description-generator smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run generator smoke test
+        working-directory: 04-product-description-generator
+        run: node tests/generator.test.mjs
