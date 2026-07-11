@@ -71,8 +71,8 @@ python3 -m http.server 8000
 ```
 
 Or just drag any campaign CSV onto the drop zone — nothing is uploaded, it runs
-entirely in the browser. Live demo (after deploy):
-`https://aaronwest-repo.github.io/growth-engineering-playbook/02-utm-audit-dashboard/`
+entirely in the browser. **Live demo:**
+[aaronwest-repo.github.io/growth-engineering-playbook/02-utm-audit-dashboard](https://aaronwest-repo.github.io/growth-engineering-playbook/02-utm-audit-dashboard/)
 
 Run the audit smoke test:
 
