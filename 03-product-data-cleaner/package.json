@@ -1,0 +1,13 @@
+{
+  "name": "product-data-cleaner",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Clean a messy product catalog into review-safe channel feeds.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/cleaner.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

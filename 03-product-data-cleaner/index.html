@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Data Cleaner - Northstar Outfitters</title>
+    <meta
+      name="description"
+      content="Clean a messy product CSV into a structured catalog, review queue, Google Shopping XML, and affiliate CSV feed."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Cpath d='M3 4h10M3 8h10M3 12h6' stroke='%234f9cf9' stroke-width='1.5' stroke-linecap='round'/%3E%3Cpath d='M11 11l1.2 1.2L15 9.4' stroke='%232fbf87' stroke-width='1.3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1720;
+        --panel: #161f2b;
+        --panel-2: #1c2836;
+        --panel-3: #111a24;
+        --border: #2a3949;
+        --text: #e7edf3;
+        --muted: #93a4b7;
+        --accent: #4f9cf9;
+        --good: #2fbf87;
+        --warn: #e0a83a;
+        --bad: #ec6a5e;
+        --radius: 12px;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(1100px 620px at 78% -12%, #20344a, transparent), var(--bg);
+        color: var(--text);
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap { max-width: 1100px; margin: 0 auto; padding: 48px 20px 64px; }
+      .eyebrow { text-transform: uppercase; letter-spacing: 0.14em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 700; }
+      h1 { font-size: clamp(30px, 4vw, 44px); line-height: 1.08; margin: 0 0 12px; letter-spacing: -0.02em; }
+      .lede { color: var(--muted); max-width: 72ch; margin: 0; font-size: 16px; }
+      h2 { font-size: 20px; margin: 34px 0 4px; }
+      .section-sub, .view-note { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+      .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px; }
+
+      .databar { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin: 24px 0 16px; }
+      .databar .file { font-variant-numeric: tabular-nums; font-size: 14px; margin: 0; }
+      .databar .file strong { color: #fff; }
+      .dropzone {
+        flex: 1 1 320px;
+        border: 1px dashed var(--border);
+        border-radius: 10px;
+        padding: 10px 14px;
+        color: var(--muted);
+        font-size: 13px;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s;
+      }
+      .dropzone:hover, .dropzone.drag { border-color: var(--accent); background: rgba(79, 156, 249, 0.08); color: var(--text); }
+
+      .stat-cards { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 18px 0 24px; }
+      .stat { background: var(--panel); padding: 13px 14px; }
+      .stat dt { color: var(--muted); font-size: 12px; margin: 0 0 2px; }
+      .stat dd { margin: 0; font-size: 22px; font-weight: 750; font-variant-numeric: tabular-nums; }
+      @media (max-width: 900px) { .stat-cards { grid-template-columns: repeat(3, 1fr); } }
+      @media (max-width: 560px) { .stat-cards { grid-template-columns: repeat(2, 1fr); } }
+
+      .verdicts { display: grid; gap: 10px; margin-top: 10px; }
+      .verdict { display: flex; gap: 12px; align-items: flex-start; padding: 13px 15px; border-radius: 10px; background: var(--panel-2); border-left: 4px solid var(--muted); font-size: 14.5px; }
+      .verdict .dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 7px; flex: none; }
+      .sev-bad { border-left-color: var(--bad); } .sev-bad .dot { background: var(--bad); }
+      .sev-warn { border-left-color: var(--warn); } .sev-warn .dot { background: var(--warn); }
+      .sev-info { border-left-color: var(--accent); } .sev-info .dot { background: var(--accent); }
+      .sev-good { border-left-color: var(--good); } .sev-good .dot { background: var(--good); }
+
+      .workbench { display: grid; grid-template-columns: 310px minmax(0, 1fr); gap: 18px; align-items: start; }
+      @media (max-width: 860px) { .workbench { grid-template-columns: 1fr; } }
+      .issue-panel h2, .view-panel h2 { margin-top: 0; }
+      .issue-row { display: grid; grid-template-columns: 128px 1fr 28px; gap: 9px; align-items: center; margin: 11px 0; font-size: 13px; color: var(--muted); }
+      .issue-row b { text-align: right; color: var(--text); font-variant-numeric: tabular-nums; }
+      .track { height: 9px; border-radius: 99px; background: var(--panel-3); border: 1px solid var(--border); overflow: hidden; }
+      .track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--warn), var(--accent)); }
+
+      .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+      .tabs button, .feed-meta button {
+        border: 1px solid var(--border);
+        background: var(--panel-3);
+        color: var(--muted);
+        border-radius: 999px;
+        padding: 8px 13px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .tabs button[aria-pressed="true"] { background: var(--accent); color: #071726; border-color: var(--accent); }
+      .feed-meta button { color: #071726; background: var(--accent); border-color: var(--accent); }
+
+      .review-list { display: grid; gap: 12px; }
+      .review-card { border: 1px solid var(--border); border-radius: 10px; background: var(--panel-3); padding: 14px; }
+      .review-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+      .review-head h3 { margin: 0 0 2px; font-size: 16px; }
+      .review-head p { margin: 0; color: var(--muted); font-size: 12px; }
+      .status { white-space: nowrap; font-size: 12px; border-radius: 999px; padding: 3px 9px; font-weight: 800; }
+      .status.good { color: var(--good); background: rgba(47, 191, 135, 0.14); }
+      .status.warn { color: var(--warn); background: rgba(224, 168, 58, 0.14); }
+      .status.bad { color: var(--bad); background: rgba(236, 106, 94, 0.14); }
+      .confidence { display: grid; grid-template-columns: 76px 1fr 42px; gap: 9px; align-items: center; margin: 12px 0 9px; color: var(--muted); font-size: 12px; }
+      .confidence div { height: 8px; background: #0c1219; border: 1px solid var(--border); border-radius: 99px; overflow: hidden; }
+      .confidence i { display: block; height: 100%; background: linear-gradient(90deg, var(--bad), var(--warn), var(--good)); }
+      .confidence b { color: var(--text); text-align: right; }
+      .review-card ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
+      .review-card li + li { margin-top: 5px; }
+      .review-card em { display: block; color: var(--text); font-style: normal; }
+
+      .table-wrap { overflow: auto; border: 1px solid var(--border); border-radius: 10px; }
+      table { width: 100%; border-collapse: collapse; min-width: 720px; font-size: 13px; }
+      th, td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: top; text-align: left; }
+      th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+      td span { color: var(--muted); font-size: 12px; }
+
+      .feed-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; color: var(--muted); font-size: 13px; }
+      .code-preview { margin: 0; max-height: 520px; overflow: auto; padding: 14px; background: #0a1118; border: 1px solid var(--border); border-radius: 10px; color: #cbd7e4; font-size: 12px; line-height: 1.45; }
+
+      .workflow { margin-top: 24px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+      .step { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 13px; }
+      .step b { display: block; color: var(--accent); font-size: 12px; margin-bottom: 5px; }
+      .step span { color: var(--muted); font-size: 13px; }
+      @media (max-width: 900px) { .workflow { grid-template-columns: 1fr 1fr; } }
+      @media (max-width: 560px) { .workflow { grid-template-columns: 1fr; } }
+
+      .footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+      .footer a { color: var(--accent); }
+      code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: 0.9em; }
+      .error { color: var(--bad); }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Growth Engineering Playbook</p>
+        <h1>Messy catalog in, clean feeds out</h1>
+        <p class="lede">
+          Clean a product CSV into a structured catalog, a human review queue,
+          and channel-ready feeds. The point is not magic: deterministic rules
+          handle safe fixes, AI-style suggestions help with messy fields, and
+          uncertain fixes stay visible for review.
+        </p>
+      </header>
+
+      <div class="databar">
+        <p class="file" id="fileInfo">Loading sample catalog...</p>
+        <label class="dropzone" id="dropzone">
+          Drop a product CSV here, or click to choose a file
+          <input type="file" id="fileInput" accept=".csv,text/csv" hidden />
+        </label>
+      </div>
+
+      <dl class="stat-cards" id="statCards"></dl>
+
+      <section aria-labelledby="diag-title">
+        <h2 id="diag-title">Operational Verdict</h2>
+        <p class="section-sub">What should happen before this catalog reaches Google Shopping, affiliates, or a marketplace.</p>
+        <div class="verdicts" id="verdicts"></div>
+      </section>
+
+      <section class="workbench" aria-label="Catalog cleaner workbench">
+        <aside class="panel issue-panel">
+          <h2>Issue Mix</h2>
+          <p class="section-sub">Defects found in the messy sample. These are counted before trusting any feed output.</p>
+          <div id="issueBars"></div>
+        </aside>
+
+        <section class="panel view-panel" aria-labelledby="viewTitle">
+          <div class="tabs" role="group" aria-label="Workbench view">
+            <button type="button" data-view="review" aria-pressed="true">Review queue</button>
+            <button type="button" data-view="diff" aria-pressed="false">Before / after</button>
+            <button type="button" data-view="google" aria-pressed="false">Google XML</button>
+            <button type="button" data-view="affiliate" aria-pressed="false">Affiliate CSV</button>
+          </div>
+          <h2 id="viewTitle">Human Review Queue</h2>
+          <div id="viewBody"></div>
+        </section>
+      </section>
+
+      <section class="workflow" aria-label="Cleaner workflow">
+        <div class="step"><b>01 Schema</b><span>Check required product, variant, price, and feed fields.</span></div>
+        <div class="step"><b>02 Rules</b><span>Normalize casing, sizes, localized prices, HTML, and feed-safe values.</span></div>
+        <div class="step"><b>03 Assist</b><span>Suggest missing attributes from sibling variants and text patterns.</span></div>
+        <div class="step"><b>04 Review</b><span>Block duplicate SKUs and uncertain fixes instead of hiding them.</span></div>
+        <div class="step"><b>05 Export</b><span>Generate channel-specific Google Shopping XML and affiliate CSV.</span></div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          Sample data is the fictional <strong>Northstar Outfitters</strong> catalog from this
+          playbook's <code>shared-data/</code>. Client-side only; nothing is uploaded. Part of the
+          <a href="https://github.com/aaronwest-repo/growth-engineering-playbook">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

@@ -86,3 +86,19 @@ jobs:
       - name: Run UTM audit smoke test
         working-directory: 02-utm-audit-dashboard
         run: node tests/audit.test.mjs
+
+  product-data-cleaner:
+    name: 03-product-data-cleaner smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run product cleaner smoke test
+        working-directory: 03-product-data-cleaner
+        run: node tests/cleaner.test.mjs
