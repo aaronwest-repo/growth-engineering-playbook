@@ -76,6 +76,9 @@ python3 -m http.server 8000
 # then open http://localhost:8000/06-affiliate-tracking-simulator/
 ```
 
+**Live demo:**
+[aaronwest-repo.github.io/growth-engineering-playbook/06-affiliate-tracking-simulator](https://aaronwest-repo.github.io/growth-engineering-playbook/06-affiliate-tracking-simulator/)
+
 Regenerate the event data (deterministic):
 
 ```bash
