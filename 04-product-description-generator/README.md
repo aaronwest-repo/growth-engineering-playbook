@@ -70,6 +70,9 @@ python3 -m http.server 8000
 # then open http://localhost:8000/04-product-description-generator/
 ```
 
+**Live demo:**
+[aaronwest-repo.github.io/growth-engineering-playbook/04-product-description-generator](https://aaronwest-repo.github.io/growth-engineering-playbook/04-product-description-generator/)
+
 Run the smoke test:
 
 ```bash
