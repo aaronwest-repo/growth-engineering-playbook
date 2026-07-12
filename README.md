@@ -32,7 +32,7 @@ Wave 1 is live: eight browser-runnable tools, each with source code, a screensho
 | 8 | [`static-commerce-stack`](08-static-commerce-stack) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/08-static-commerce-stack/) | Static-site deployment with S3-style storage, CDN invalidation, and cache trade-offs |
 | 9 | [`mini-cdp-identity-resolution`](09-mini-cdp-identity-resolution) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/09-mini-cdp-identity-resolution/) | Customer identity resolution: confidence scoring, consent boundaries, false-merge risk, and segment-ready profiles |
 | 10 | [`rfm-segmentation-dashboard`](10-rfm-segmentation-dashboard) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/10-rfm-segmentation-dashboard/) | RFM scoring as a decision layer: return-adjusted value, consent/suppression eligibility, segment explanations, and campaign recommendations |
-| 11 | [`lifecycle-campaign-planner`](11-lifecycle-campaign-planner) | Demo-ready | Segment-to-campaign planning: eligibility, suppression, holdouts, margin-aware incentives, timing, measurement, and risk controls |
+| 11 | [`lifecycle-campaign-planner`](11-lifecycle-campaign-planner) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/11-lifecycle-campaign-planner/) | Segment-to-campaign planning: eligibility, suppression, holdouts, margin-aware incentives, timing, measurement, and risk controls |
 
 ## Run Philosophy
 
