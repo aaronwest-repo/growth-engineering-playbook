@@ -1,0 +1,13 @@
+{
+  "name": "rfm-segmentation-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Turn resolved customer profiles into lifecycle decisions: RFM scoring, return-adjusted value, consent + suppression eligibility, segment explanations, and rule-based campaign recommendations.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/rfm.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

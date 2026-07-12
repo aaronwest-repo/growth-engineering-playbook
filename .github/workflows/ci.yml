@@ -198,3 +198,19 @@ jobs:
       - name: Run mini-CDP smoke test
         working-directory: 09-mini-cdp-identity-resolution
         run: node tests/cdp.test.mjs
+
+  rfm-segmentation-dashboard:
+    name: 10-rfm-segmentation-dashboard smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run RFM segmentation smoke test
+        working-directory: 10-rfm-segmentation-dashboard
+        run: node tests/rfm.test.mjs

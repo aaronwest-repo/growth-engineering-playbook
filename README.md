@@ -18,7 +18,7 @@ Role signal: senior e-commerce / marketing technology work, focused on turning m
 
 ## Use Cases
 
-Wave 1 is live: eight browser-runnable tools, each with source code, a screenshot, a smoke test, and a GitHub Pages demo.
+Wave 1 is live: eight browser-runnable tools, each with source code, a screenshot, a smoke test, and a GitHub Pages demo. Wave 2 is underway with customer data and lifecycle growth demos.
 
 | # | Demo | Status | What it demonstrates |
 |---|------|--------|----------------------|
@@ -31,6 +31,7 @@ Wave 1 is live: eight browser-runnable tools, each with source code, a screensho
 | 7 | [`cart-recovery-automation`](07-cart-recovery-automation) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/07-cart-recovery-automation/) | Event-driven automation with queueing, retries, email templates, and human approval gates |
 | 8 | [`static-commerce-stack`](08-static-commerce-stack) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/08-static-commerce-stack/) | Static-site deployment with S3-style storage, CDN invalidation, and cache trade-offs |
 | 9 | [`mini-cdp-identity-resolution`](09-mini-cdp-identity-resolution) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/09-mini-cdp-identity-resolution/) | Customer identity resolution: confidence scoring, consent boundaries, false-merge risk, and segment-ready profiles |
+| 10 | [`rfm-segmentation-dashboard`](10-rfm-segmentation-dashboard) | Demo-ready | RFM scoring as a decision layer: return-adjusted value, consent/suppression eligibility, segment explanations, and campaign recommendations |
 
 ## Run Philosophy
 
