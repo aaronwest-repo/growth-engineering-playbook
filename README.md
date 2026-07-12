@@ -1,6 +1,6 @@
 # Growth Engineering Playbook
 
-Eight live, runnable e-commerce growth engineering demos: experimentation, tracking, AI workflows, automation, RAG, affiliate attribution, and static web infrastructure.
+Live, runnable e-commerce growth engineering demos: experimentation, tracking, AI workflows, automation, RAG, affiliate attribution, customer data, lifecycle growth, and static web infrastructure.
 
 **Live portfolio:** [aaronwest.de/portfolio.html](https://aaronwest.de/portfolio.html)
 
