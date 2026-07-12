@@ -1,6 +1,8 @@
 # Secrets
 .env
 .env.*
+# ...but placeholder-only template examples are safe to commit.
+!**/templates/.env.example
 
 # Dependencies
 node_modules/
