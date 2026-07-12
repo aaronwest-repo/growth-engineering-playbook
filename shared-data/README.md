@@ -32,6 +32,11 @@ shared-data/
     ├── web-events.jsonl        # invented on-site touchpoints (view/cart/purchase)
     ├── conversions.jsonl       # invented orders with attribution/validation labels
     └── cart-events.jsonl       # invented abandoned carts for the recovery workflow
+└── customers/
+    ├── customers.csv           # invented customer profiles (with duplicate identities)
+    ├── orders.csv              # invented orders linked to customers
+    ├── email-events.csv        # invented email sends/opens/clicks/unsubscribes
+    └── support-tickets.csv     # invented support tickets (themes, sentiment)
 ```
 
 Customers and expanded feed samples are added by later use cases when they need
@@ -70,5 +75,9 @@ check and validation on every push and pull request.
 | `events/web-events.jsonl` | 943 rows | invented on-site touchpoints across channels |
 | `events/conversions.jsonl` | 206 rows | invented orders with attribution + validation labels |
 | `events/cart-events.jsonl` | 120 rows | invented abandoned carts (consent, recover propensity, provider-error seed) |
+| `customers/customers.csv` | 80 rows | invented profiles incl. 12 duplicate-identity pairs (same email_hash, conflicting opt-in/consent) |
+| `customers/orders.csv` | 195 rows | invented orders linked to customers |
+| `customers/email-events.csv` | 176 rows | email sends/opens/clicks/unsubscribes (some hash-only or id-only) |
+| `customers/support-tickets.csv` | 18 rows | support tickets (themes, sentiment; some without customer_id) |
 
 See [DATA_NOTES.md](DATA_NOTES.md) for the intentional messiness catalogue.

@@ -140,6 +140,29 @@ seeds: `purchased_before_send`, `recovers_if_emailed`, `provider_error`, and
 suppression, waits, sends, retries, and recovery live from these inputs — the
 email sends and automation runs are outputs, not stored data.
 
+## Customer layer (`customers/`)
+
+Deterministic customer/order/email/support data for the mini-CDP identity
+demo (use case #9). All identifiers are synthetic: `email_hash` is a token like
+`eh_96d543f764` (never a real address), names are fictional first names, and
+there is no personal data.
+
+Intentional identity messiness baked in (so resolution has something to decide):
+
+| Scenario | What it exercises |
+|----------|-------------------|
+| Same `email_hash` under two `customer_id`s (12 pairs) | Deterministic exact-match auto-merge |
+| Duplicate rows with conflicting `newsletter_opt_in` / consent | Consent & opt-in conflict handling |
+| Near-duplicate decoys (same first name + country, different hash) | False-merge risk — must hold for review, not auto-merge |
+| Orders spread across a person's primary + duplicate IDs | Activity reattachment after merge |
+| Email events / tickets with only `email_hash` (no `customer_id`) | Linking records with weak keys |
+| Country / language inconsistencies across a person's rows | Attribute reconciliation |
+
+`orders.csv` links to `customers.csv` by `customer_id`; `support-tickets.csv`
+`product_id` references the catalog. The mini-CDP recomputes profiles,
+confidence, merges, and consent boundaries live — merge outcomes are
+rule-dependent, not stored.
+
 ## Guarantees for downstream use cases
 
 - Clean files pass strict validation (`scripts/validate-shared-data.py`).

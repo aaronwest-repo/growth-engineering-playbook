@@ -23,6 +23,7 @@ CATALOG = ROOT / "shared-data" / "catalog"
 MARKETING = ROOT / "shared-data" / "marketing"
 CONTENT = ROOT / "shared-data" / "content"
 EVENTS = ROOT / "shared-data" / "events"
+CUSTOMERS = ROOT / "shared-data" / "customers"
 
 PRODUCT_COLUMNS = [
     "product_id", "parent_id", "sku", "title_en", "title_de", "brand",
@@ -324,6 +325,95 @@ def validate_events(product_ids: set[str], campaign_ids: set[str]) -> dict:
     return counts
 
 
+CUSTOMER_FILES = {
+    "customers.csv": ["customer_id", "email_hash", "first_name", "country", "language",
+                      "created_at", "newsletter_opt_in", "loyalty_tier",
+                      "consent_marketing", "consent_personalization"],
+    "orders.csv": ["order_id", "customer_id", "order_date", "channel", "campaign_id",
+                   "gross_revenue", "discount", "shipping_revenue", "product_cost",
+                   "shipping_cost", "returned_amount", "currency"],
+    "email-events.csv": ["event_id", "email_hash", "customer_id", "event_type",
+                         "occurred_at", "campaign_type", "message_id"],
+    "support-tickets.csv": ["ticket_id", "customer_id", "email_hash", "created_at",
+                            "theme", "sentiment", "product_id", "status"],
+}
+COUNTRIES = {"DE", "AT", "NL", "BE", "LU"}
+
+
+def _date_ok(v) -> bool:
+    try:
+        date.fromisoformat(str(v)); return True
+    except ValueError:
+        return False
+
+
+def validate_customers(product_ids: set[str]) -> dict:
+    counts, data = {}, {}
+    for name, cols in CUSTOMER_FILES.items():
+        path = CUSTOMERS / name
+        if not path.exists():
+            fail(f"customers/{name}: missing required file"); data[name] = ([], []); continue
+        header, rows = read_rows(path)
+        data[name] = (header, rows)
+        counts[name] = len(rows)
+        check_header(path, header, cols)
+        if not rows:
+            fail(f"customers/{name}: no data rows")
+
+    # Privacy: no raw email addresses anywhere in the customer layer.
+    for name, (_h, rows) in data.items():
+        for r in rows:
+            if any("@" in str(v) for v in r.values()):
+                fail(f"customers/{name}: '@' found — looks like a real email"); break
+
+    cust_rows = data["customers.csv"][1]
+    customer_ids = set()
+    for i, r in enumerate(cust_rows, start=2):
+        cid = r.get("customer_id", "")
+        if not cid or cid in customer_ids:
+            fail(f"customers.csv row {i}: empty/duplicate customer_id {cid!r}")
+        customer_ids.add(cid)
+        if r.get("email_hash") and not r["email_hash"].startswith("eh_"):
+            fail(f"customers.csv row {i}: email_hash not a synthetic token: {r['email_hash']!r}")
+        if r.get("country") not in COUNTRIES:
+            fail(f"customers.csv row {i}: bad country {r.get('country')!r}")
+        if not _date_ok(r.get("created_at")):
+            fail(f"customers.csv row {i}: bad created_at {r.get('created_at')!r}")
+        for b in ("newsletter_opt_in", "consent_marketing", "consent_personalization"):
+            if r.get(b) not in ("true", "false"):
+                fail(f"customers.csv row {i}: {b} not boolean: {r.get(b)!r}")
+
+    order_ids = set()
+    for i, r in enumerate(data["orders.csv"][1], start=2):
+        oid = r.get("order_id", "")
+        if not oid or oid in order_ids:
+            fail(f"orders.csv row {i}: empty/duplicate order_id {oid!r}")
+        order_ids.add(oid)
+        if r.get("customer_id") not in customer_ids:
+            fail(f"orders.csv row {i}: customer_id {r.get('customer_id')!r} not in customers")
+        if not _date_ok(r.get("order_date")):
+            fail(f"orders.csv row {i}: bad order_date {r.get('order_date')!r}")
+        for numf in ("gross_revenue", "discount", "shipping_revenue", "product_cost", "shipping_cost", "returned_amount"):
+            if as_float(r.get(numf)) is None:
+                fail(f"orders.csv row {i}: {numf} not numeric: {r.get(numf)!r}")
+
+    for i, r in enumerate(data["email-events.csv"][1], start=2):
+        if not r.get("email_hash") and not r.get("customer_id"):
+            fail(f"email-events.csv row {i}: has neither email_hash nor customer_id")
+        if r.get("customer_id") and r["customer_id"] not in customer_ids:
+            fail(f"email-events.csv row {i}: unknown customer_id {r['customer_id']}")
+
+    for i, r in enumerate(data["support-tickets.csv"][1], start=2):
+        if r.get("product_id") and r["product_id"] not in product_ids:
+            fail(f"support-tickets.csv row {i}: unknown product_id {r['product_id']}")
+        if r.get("customer_id") and r["customer_id"] not in customer_ids:
+            fail(f"support-tickets.csv row {i}: unknown customer_id {r['customer_id']}")
+        if not _date_ok(r.get("created_at")):
+            fail(f"support-tickets.csv row {i}: bad created_at {r.get('created_at')!r}")
+
+    return counts
+
+
 def validate_content_docs() -> None:
     for name in sorted(CONTENT_DOCS):
         path = CONTENT / name
@@ -347,6 +437,7 @@ def main() -> int:
                              CAMPAIGN_COLUMNS, "campaign_id", campaign_ids)
     validate_content_docs()
     event_counts = validate_events(product_ids, campaign_ids)
+    customer_counts = validate_customers(product_ids)
 
     print("Shared-data validation")
     print(f"  products-clean:   {len(product_ids)} products")
@@ -354,6 +445,8 @@ def main() -> int:
     print(f"  content docs:     {len(CONTENT_DOCS)} documents")
     for name, count in event_counts.items():
         print(f"  events/{name}: {count} rows")
+    for name, count in customer_counts.items():
+        print(f"  customers/{name}: {count} rows")
 
     if errors:
         print(f"\nFAILED with {len(errors)} error(s):")

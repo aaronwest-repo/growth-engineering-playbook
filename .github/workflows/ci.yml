@@ -182,3 +182,19 @@ jobs:
       - name: Run static stack smoke test
         working-directory: 08-static-commerce-stack
         run: node tests/stack.test.mjs
+
+  mini-cdp-identity-resolution:
+    name: 09-mini-cdp-identity-resolution smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run mini-CDP smoke test
+        working-directory: 09-mini-cdp-identity-resolution
+        run: node tests/cdp.test.mjs

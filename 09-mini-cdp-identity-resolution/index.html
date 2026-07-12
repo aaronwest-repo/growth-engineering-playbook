@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mini CDP Identity Resolution - Northstar Outfitters</title>
+    <meta
+      name="description"
+      content="A small customer-data platform that resolves messy customer, order, email, and support records into trustworthy profiles — with confidence scores, consent boundaries, false-merge warnings, and an audit trail."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Ccircle cx='4.5' cy='5' r='1.6' fill='%234f9cf9'/%3E%3Ccircle cx='4.5' cy='11' r='1.6' fill='%23e0a83a'/%3E%3Ccircle cx='11.5' cy='8' r='1.9' fill='%232fbf87'/%3E%3Cpath d='M6 5.4 9.8 7.4M6 10.6 9.8 8.6' stroke='%23415066' stroke-width='1'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1720; --panel: #161f2b; --panel-2: #1c2836; --border: #2a3949;
+        --text: #e7edf3; --muted: #93a4b7; --accent: #4f9cf9;
+        --good: #2fbf87; --warn: #e0a83a; --bad: #ec6a5e;
+        --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #1a2a3d, transparent), var(--bg); background-color: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 1080px; margin: 0 auto; padding: 48px 20px 64px; }
+      .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 600; }
+      h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.02em; }
+      .lede { color: var(--muted); max-width: 72ch; margin: 0; font-size: 16px; }
+      h2 { font-size: 19px; margin: 32px 0 4px; }
+      .section-sub { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
+      .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; }
+      .file { font-size: 14px; color: var(--muted); margin-top: 12px; } .file strong { color: #fff; }
+
+      .controls { display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-end; margin: 22px 0 6px; }
+      .ctrl label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+      .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+      .seg button { background: transparent; color: var(--muted); border: none; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+      .seg button[aria-pressed="true"] { background: var(--accent); color: #05192f; }
+      select { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px 11px; font-size: 14px; min-width: 260px; }
+
+      .metrics { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 8px 0 4px; }
+      @media (max-width: 900px) { .metrics { grid-template-columns: repeat(4, 1fr); } }
+      @media (max-width: 520px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+      .metric { background: var(--panel); padding: 12px 12px; }
+      .metric dt { font-size: 11px; color: var(--muted); margin: 0 0 4px; }
+      .metric dd { margin: 0; font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .metric.good dd { color: var(--good); } .metric.warn dd { color: var(--warn); } .metric.bad dd { color: var(--bad); }
+
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+      @media (max-width: 820px) { .grid2 { grid-template-columns: 1fr; } }
+
+      /* Identity graph */
+      .ig-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+      .conf { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(47,191,135,.14); color: var(--good); }
+      .conf.merged { background: rgba(79,156,249,.16); color: var(--accent); }
+      .ig-node { border: 1px solid var(--border); border-radius: 9px; padding: 9px 12px; margin-bottom: 8px; font-size: 13px; }
+      .ig-node h4 { margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+      .ig-node .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+      .chip { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg); font-variant-numeric: tabular-nums; }
+      .evidence { color: var(--muted); font-size: 12.5px; margin: 6px 0 0; }
+
+      .seg-chip { display: inline-block; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; margin: 0 6px 6px 0; background: var(--panel-2); border: 1px solid var(--border); }
+      .seg-chip.vip { color: #ffd93d; border-color: rgba(215,177,53,.5); }
+      .seg-chip.risk { color: var(--bad); border-color: rgba(236,106,94,.4); }
+      .seg-chip.ok { color: var(--good); border-color: rgba(47,191,135,.4); }
+      .consent-line { font-size: 13px; color: var(--muted); margin-top: 8px; }
+      .consent-line b { color: var(--text); }
+
+      .q-row { display: grid; grid-template-columns: 92px 1fr 52px; gap: 10px; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+      .q-row:last-child { border-bottom: none; }
+      .dec { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 7px; border-radius: 999px; text-align: center; }
+      .dec-auto_merge { color: var(--good); background: rgba(47,191,135,.14); }
+      .dec-review_required { color: var(--warn); background: rgba(224,168,58,.14); }
+      .dec-blocked { color: var(--bad); background: rgba(236,106,94,.14); }
+      .dec-ignored_strict { color: var(--muted); background: rgba(255,255,255,.05); }
+      .q-row .cf { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+      .q-note { color: var(--muted); font-size: 12px; }
+
+      .fmr { font-size: 13.5px; }
+      .fmr .ex { background: var(--panel-2); border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px; margin-top: 8px; }
+      .fmr .verdict { font-weight: 600; margin-top: 6px; }
+      .fmr .verdict.hold { color: var(--warn); } .fmr .verdict.merge { color: var(--bad); }
+
+      table.audit { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+      table.audit th, table.audit td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+      table.audit th { color: var(--muted); font-size: 11px; text-transform: uppercase; }
+      table.audit td.cf { font-variant-numeric: tabular-nums; }
+
+      .footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+      .footer a { color: var(--accent); }
+      code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: .9em; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Growth Engineering Playbook · Wave 2</p>
+        <h1>When are you sure it's the same person?</h1>
+        <p class="lede">
+          A mini customer-data platform. It resolves messy customer, order, email,
+          and support records for the Northstar Outfitters store into unified
+          profiles — with confidence scores, consent boundaries, false-merge
+          warnings, and an audit trail. Not "join rows by email": the hard part is
+          deciding when you're confident enough to merge, and what consent allows.
+          Deterministic, client-side, synthetic identifiers only.
+        </p>
+        <p class="file" id="fileInfo">Loading customer data…</p>
+      </header>
+
+      <div class="controls">
+        <div class="ctrl">
+          <label>Matching rule</label>
+          <div class="seg" data-control="mode">
+            <button type="button" data-value="strict">Strict</button>
+            <button type="button" data-value="balanced" aria-pressed="true">Balanced</button>
+            <button type="button" data-value="aggressive">Aggressive</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Consent boundaries</label>
+          <div class="seg" data-control="respectConsent">
+            <button type="button" data-value="respect" aria-pressed="true">Respect</button>
+            <button type="button" data-value="ignore">Ignore (compare)</button>
+          </div>
+        </div>
+      </div>
+
+      <dl class="metrics" id="metrics"></dl>
+
+      <div class="grid2">
+        <section>
+          <h2>Identity Graph</h2>
+          <p class="section-sub">One resolved profile and the records stitched into it.</p>
+          <div style="margin-bottom:10px"><select id="profileSelect" aria-label="Select a resolved profile"></select></div>
+          <div class="panel" id="identityGraph"></div>
+        </section>
+        <section>
+          <h2>Segment Preview</h2>
+          <p class="section-sub">The same profile, made usable for lifecycle marketing.</p>
+          <div class="panel" id="segments"></div>
+        </section>
+      </div>
+
+      <div class="grid2">
+        <section>
+          <h2>Merge Queue</h2>
+          <p class="section-sub">Auto-merge, review, or blocked — with evidence and confidence.</p>
+          <div class="panel" id="mergeQueue"></div>
+        </section>
+        <section>
+          <h2>False-Merge Risk</h2>
+          <p class="section-sub">Why aggressive matching is dangerous.</p>
+          <div class="panel fmr" id="falseMerge"></div>
+        </section>
+      </div>
+
+      <section>
+        <h2>Audit Trail</h2>
+        <p class="section-sub">Every decision, explainable after the fact: rule, evidence, confidence, decision, consent.</p>
+        <div class="panel"><table class="audit" id="audit"></table></div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          Customer data is the fictional <strong>Northstar Outfitters</strong> store from this
+          playbook's <code>shared-data/customers/</code>. Synthetic identifiers only — no real
+          emails or personal data. Client-side, no backend. Part of the
+          <a href="https://github.com/aaronwest-repo/growth-engineering-playbook" target="_blank" rel="noopener">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

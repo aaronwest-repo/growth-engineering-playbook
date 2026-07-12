@@ -33,6 +33,7 @@ CATALOG_DIR = ROOT / "shared-data" / "catalog"
 MARKETING_DIR = ROOT / "shared-data" / "marketing"
 CONTENT_DIR = ROOT / "shared-data" / "content"
 EVENTS_DIR = ROOT / "shared-data" / "events"
+CUSTOMERS_DIR = ROOT / "shared-data" / "customers"
 
 CATEGORIES = [
     "Jackets",
@@ -725,6 +726,179 @@ def build_cart_events(products: list[dict], rng: random.Random) -> list[dict]:
     return carts
 
 
+# --- Customer / order / email / support layer (Wave 2) ---------------------
+
+CUSTOMER_COLUMNS = ["customer_id", "email_hash", "first_name", "country", "language",
+                    "created_at", "newsletter_opt_in", "loyalty_tier",
+                    "consent_marketing", "consent_personalization"]
+ORDER_COLUMNS = ["order_id", "customer_id", "order_date", "channel", "campaign_id",
+                 "gross_revenue", "discount", "shipping_revenue", "product_cost",
+                 "shipping_cost", "returned_amount", "currency"]
+EMAIL_EVENT_COLUMNS = ["event_id", "email_hash", "customer_id", "event_type",
+                       "occurred_at", "campaign_type", "message_id"]
+TICKET_COLUMNS = ["ticket_id", "customer_id", "email_hash", "created_at", "theme",
+                  "sentiment", "product_id", "status"]
+
+FIRST_NAMES = ["Mara", "Jonas", "Lena", "Tomas", "Sofia", "Nils", "Ida", "Kai",
+               "Petra", "Lukas", "Anouk", "Bram", "Elin", "Ravi", "Yuki", "Mateo",
+               "Freya", "Oskar", "Nadia", "Timo", "Alma", "Boris", "Cleo", "Dario"]
+COUNTRIES = ["DE", "AT", "NL", "BE", "LU"]
+COUNTRY_LANG = {"DE": "de", "AT": "de", "NL": "nl", "BE": "nl", "LU": "de"}
+LOYALTY = ["none", "none", "silver", "gold"]
+TICKET_THEMES = ["delivery", "returns", "sizing", "compatibility", "warranty", "payment", "sustainability"]
+SENTIMENTS = ["positive", "neutral", "negative"]
+ORDER_CHANNELS = ["organic", "paid_search", "email", "affiliate", "direct", "social"]
+EMAIL_TYPES = ["sent", "opened", "clicked", "unsubscribed"]
+CAMPAIGN_TYPES = ["welcome", "newsletter", "win-back", "post-purchase", "promo"]
+
+CUST_BASE = date(2024, 1, 1)
+
+
+def _email_hash(rng: random.Random) -> str:
+    return "eh_" + "".join(rng.choice("0123456789abcdef") for _ in range(10))
+
+
+def build_customer_data(products: list[dict], rng: random.Random):
+    """Deterministic customer/order/email/support layer with intentional identity
+    messiness for the mini-CDP demo. All identifiers are synthetic; email_hash is
+    a token (never a real address); names are fictional. No personal data."""
+    price_by_id = {p["product_id"]: float(p["price"]) for p in products}
+    margin_by_id = {p["product_id"]: float(p["margin_rate"]) for p in products}
+    product_ids = list(price_by_id.keys())
+
+    customers, orders, emails, tickets = [], [], [], []
+    cust_n = order_n = evt_n = tkt_n = 0
+
+    def new_customer_id():
+        nonlocal cust_n; cust_n += 1; return f"C-{cust_n:05d}"
+
+    # --- true people -------------------------------------------------------
+    people = []
+    for i in range(60):
+        country = rng.choice(COUNTRIES)
+        created = CUST_BASE + timedelta(days=rng.randint(0, 560))
+        people.append({
+            "name": rng.choice(FIRST_NAMES),
+            "country": country,
+            "language": COUNTRY_LANG[country],
+            "created": created,
+            "email_hash": _email_hash(rng),
+            "newsletter": rng.random() < 0.6,
+            "loyalty": rng.choice(LOYALTY),
+            "consent_marketing": rng.random() < 0.7,
+            "consent_personalization": rng.random() < 0.55,
+            "orders": rng.randint(0, 6),
+            "last_gap_days": rng.randint(2, 400),  # recency of last order
+        })
+
+    def emit_customer(p, *, email_hash=None, newsletter=None, country=None,
+                      language=None, consent_marketing=None, consent_personalization=None):
+        cid = new_customer_id()
+        customers.append({
+            "customer_id": cid,
+            "email_hash": p["email_hash"] if email_hash is None else email_hash,
+            "first_name": p["name"],
+            "country": p["country"] if country is None else country,
+            "language": p["language"] if language is None else language,
+            "created_at": p["created"].isoformat(),
+            "newsletter_opt_in": str(p["newsletter"] if newsletter is None else newsletter).lower(),
+            "loyalty_tier": p["loyalty"],
+            "consent_marketing": str(p["consent_marketing"] if consent_marketing is None else consent_marketing).lower(),
+            "consent_personalization": str(p["consent_personalization"] if consent_personalization is None else consent_personalization).lower(),
+        })
+        return cid
+
+    def add_orders(p, cid, count):
+        for _ in range(count):
+            gross = round(rng.uniform(45, 380), 2)
+            prod = rng.choice(product_ids)
+            margin = margin_by_id[prod]
+            od = p["created"] + timedelta(days=rng.randint(0, 500))
+            orders.append({
+                "order_id": f"O-{(len(orders) + 1):05d}",
+                "customer_id": cid,
+                "order_date": od.isoformat(),
+                "channel": rng.choice(ORDER_CHANNELS),
+                "campaign_id": rng.choice(["", "", "C001", "C007", "C009"]),
+                "gross_revenue": f"{gross:.2f}",
+                "discount": f"{round(gross * rng.choice([0, 0, 0.05, 0.1]), 2):.2f}",
+                "shipping_revenue": f"{rng.choice([0.0, 0.0, 4.90]):.2f}",
+                "product_cost": f"{round(gross * (1 - margin), 2):.2f}",
+                "shipping_cost": f"{round(rng.uniform(3, 6), 2):.2f}",
+                "returned_amount": f"{(round(gross, 2) if rng.random() < 0.09 else 0.0):.2f}",
+                "currency": CURRENCY,
+            })
+
+    def add_emails(p, cid, count, *, hash_only=False, id_only=False):
+        for _ in range(count):
+            evt = dict(zip(EMAIL_EVENT_COLUMNS, [""] * len(EMAIL_EVENT_COLUMNS)))
+            nonlocal evt_n; evt_n += 1
+            evt["event_id"] = f"E-{evt_n:06d}"
+            evt["email_hash"] = "" if id_only else p["email_hash"]
+            evt["customer_id"] = "" if hash_only else cid
+            evt["event_type"] = rng.choice(EMAIL_TYPES)
+            evt["occurred_at"] = _iso(EVENT_BASE + timedelta(days=rng.randint(-30, 40), hours=rng.randint(0, 20)))
+            evt["campaign_type"] = rng.choice(CAMPAIGN_TYPES)
+            evt["message_id"] = f"M-{rng.randint(1000, 9999)}"
+            emails.append(evt)
+
+    def add_ticket(p, cid, *, hash_only=False):
+        nonlocal tkt_n; tkt_n += 1
+        tickets.append({
+            "ticket_id": f"T-{tkt_n:05d}",
+            "customer_id": "" if hash_only else cid,
+            "email_hash": p["email_hash"],
+            "created_at": (p["created"] + timedelta(days=rng.randint(5, 480))).isoformat(),
+            "theme": rng.choice(TICKET_THEMES),
+            "sentiment": rng.choice(SENTIMENTS),
+            "product_id": rng.choice(product_ids),
+            "status": rng.choice(["open", "resolved", "resolved", "closed"]),
+        })
+
+    # --- emit each person's primary record + activity ----------------------
+    for i, p in enumerate(people):
+        cid = emit_customer(p)
+        p["primary_id"] = cid
+        add_orders(p, cid, p["orders"])
+        add_emails(p, cid, rng.randint(0, 5))
+        if rng.random() < 0.35:
+            add_ticket(p, cid, hash_only=(rng.random() < 0.4))  # some tickets have no customer_id
+
+        # Duplicate record: same email_hash, new customer_id, with a conflict.
+        if i % 5 == 0:
+            dup_id = emit_customer(
+                p,
+                newsletter=not p["newsletter"],                 # newsletter opt-in conflict
+                country=rng.choice(COUNTRIES) if i % 10 == 0 else None,  # country inconsistency
+                consent_marketing=not p["consent_marketing"] if i % 15 == 0 else None,  # consent conflict
+            )
+            p["duplicate_id"] = dup_id
+            add_orders(p, dup_id, rng.randint(0, 2))            # orders spread across duplicate IDs
+            add_emails(p, dup_id, rng.randint(0, 2))
+
+    # --- near-duplicate decoys: DIFFERENT real people, same name+country ---
+    # These must NOT auto-merge (weak evidence). Aggressive matching would merge
+    # them (a false merge); balanced holds them for review.
+    for i in range(8):
+        base = people[i * 6]
+        decoy = {
+            "name": base["name"], "country": base["country"],
+            "language": base["language"],
+            "created": base["created"] + timedelta(days=rng.randint(1, 9)),
+            "email_hash": _email_hash(rng),  # DIFFERENT hash — a different person
+            "newsletter": rng.random() < 0.6, "loyalty": rng.choice(LOYALTY),
+            "consent_marketing": rng.random() < 0.7,
+            "consent_personalization": rng.random() < 0.55, "orders": rng.randint(1, 4),
+            "last_gap_days": rng.randint(2, 300),
+        }
+        cid = emit_customer(decoy)
+        decoy["primary_id"] = cid
+        add_orders(decoy, cid, decoy["orders"])
+        add_emails(decoy, cid, rng.randint(1, 3))
+
+    return customers, orders, emails, tickets
+
+
 def write_jsonl(path: Path, rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
@@ -740,6 +914,7 @@ def main() -> None:
     campaigns_messy = inject_campaign_mess(campaigns, random.Random(SEED + 3))
     aff_clicks, web_events, conversions = build_events(products, random.Random(SEED + 4))
     cart_events = build_cart_events(products, random.Random(SEED + 5))
+    customers, orders, email_events, tickets = build_customer_data(products, random.Random(SEED + 6))
 
     write_csv(CATALOG_DIR / "products-clean.csv", PRODUCT_COLUMNS, products)
     write_csv(CATALOG_DIR / "products-messy.csv", PRODUCT_COLUMNS, products_messy)
@@ -750,6 +925,10 @@ def main() -> None:
     write_jsonl(EVENTS_DIR / "web-events.jsonl", web_events)
     write_jsonl(EVENTS_DIR / "conversions.jsonl", conversions)
     write_jsonl(EVENTS_DIR / "cart-events.jsonl", cart_events)
+    write_csv(CUSTOMERS_DIR / "customers.csv", CUSTOMER_COLUMNS, customers)
+    write_csv(CUSTOMERS_DIR / "orders.csv", ORDER_COLUMNS, orders)
+    write_csv(CUSTOMERS_DIR / "email-events.csv", EMAIL_EVENT_COLUMNS, email_events)
+    write_csv(CUSTOMERS_DIR / "support-tickets.csv", TICKET_COLUMNS, tickets)
 
     print(f"products-clean.csv       {len(products):>4} rows")
     print(f"products-messy.csv       {len(products_messy):>4} rows")
@@ -760,6 +939,10 @@ def main() -> None:
     print(f"web-events.jsonl         {len(web_events):>4} rows")
     print(f"conversions.jsonl        {len(conversions):>4} rows")
     print(f"cart-events.jsonl        {len(cart_events):>4} rows")
+    print(f"customers.csv            {len(customers):>4} rows")
+    print(f"orders.csv               {len(orders):>4} rows")
+    print(f"email-events.csv         {len(email_events):>4} rows")
+    print(f"support-tickets.csv      {len(tickets):>4} rows")
 
 
 if __name__ == "__main__":

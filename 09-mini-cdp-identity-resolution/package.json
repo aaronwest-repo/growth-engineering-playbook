@@ -1,0 +1,13 @@
+{
+  "name": "mini-cdp-identity-resolution",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A mini customer-data platform: resolve messy customer/order/email/support records into trustworthy profiles with confidence, consent boundaries, and false-merge warnings.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/cdp.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -30,6 +30,7 @@ Wave 1 is live: eight browser-runnable tools, each with source code, a screensho
 | 6 | [`affiliate-tracking-simulator`](06-affiliate-tracking-simulator) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/06-affiliate-tracking-simulator/) (flagship) | Click tracking, cookies, attribution, deduplication, validation, and fraud patterns |
 | 7 | [`cart-recovery-automation`](07-cart-recovery-automation) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/07-cart-recovery-automation/) | Event-driven automation with queueing, retries, email templates, and human approval gates |
 | 8 | [`static-commerce-stack`](08-static-commerce-stack) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/08-static-commerce-stack/) | Static-site deployment with S3-style storage, CDN invalidation, and cache trade-offs |
+| 9 | [`mini-cdp-identity-resolution`](09-mini-cdp-identity-resolution) | Demo-ready | Customer identity resolution: confidence scoring, consent boundaries, false-merge risk, and segment-ready profiles |
 
 ## Run Philosophy
 
