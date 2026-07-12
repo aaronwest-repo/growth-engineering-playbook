@@ -1,0 +1,13 @@
+{
+  "name": "lifecycle-campaign-planner",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Turn lifecycle segments into controlled campaigns: eligibility, suppression, holdouts, margin-aware incentives, timing, message briefs, measurement, and risk controls.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/planner.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

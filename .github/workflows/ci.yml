@@ -214,3 +214,19 @@ jobs:
       - name: Run RFM segmentation smoke test
         working-directory: 10-rfm-segmentation-dashboard
         run: node tests/rfm.test.mjs
+
+  lifecycle-campaign-planner:
+    name: 11-lifecycle-campaign-planner smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run lifecycle campaign planner smoke test
+        working-directory: 11-lifecycle-campaign-planner
+        run: node tests/planner.test.mjs
