@@ -78,6 +78,9 @@ python3 -m http.server 8000
 # then open http://localhost:8000/09-mini-cdp-identity-resolution/
 ```
 
+**Live demo:**
+[aaronwest-repo.github.io/growth-engineering-playbook/09-mini-cdp-identity-resolution](https://aaronwest-repo.github.io/growth-engineering-playbook/09-mini-cdp-identity-resolution/)
+
 Run the smoke test:
 
 ```bash
