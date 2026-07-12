@@ -1,6 +1,8 @@
 # Growth Engineering Playbook
 
-Runnable e-commerce growth engineering demos: experimentation, tracking, AI workflows, automation, RAG, affiliate attribution, and static web infrastructure.
+Eight live, runnable e-commerce growth engineering demos: experimentation, tracking, AI workflows, automation, RAG, affiliate attribution, and static web infrastructure.
+
+**Live portfolio:** [aaronwest.de/portfolio.html](https://aaronwest.de/portfolio.html)
 
 This repo is a portfolio of small, inspectable tools that connect commercial growth problems with technical implementation. Each use case includes sample data, a screenshot or GIF, one-command setup, and links to the articles explaining the thinking behind it.
 
@@ -15,6 +17,8 @@ Role signal: senior e-commerce / marketing technology work, focused on turning m
 - **Web stack literacy:** explaining simple, low-cost infrastructure in a way non-engineers can still reason about.
 
 ## Use Cases
+
+Wave 1 is live: eight browser-runnable tools, each with source code, a screenshot, a smoke test, and a GitHub Pages demo.
 
 | # | Demo | Status | What it demonstrates |
 |---|------|--------|----------------------|
