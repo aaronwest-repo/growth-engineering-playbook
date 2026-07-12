@@ -1,0 +1,26 @@
+{
+  "_comment": "Illustrative cache-control policy for a static site. Long-lived, immutable caching for content-hashed assets; short/no-cache for HTML and feeds so content deploys go live promptly. Adapt to your provider's syntax.",
+  "rules": [
+    {
+      "match": "assets/**",
+      "note": "Content-hashed filenames — safe to cache for a year; a new build gets new URLs.",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "match": "**/*.html",
+      "note": "Stable URLs — keep short so content changes appear without waiting on a long TTL.",
+      "cacheControl": "public, max-age=300, must-revalidate"
+    },
+    {
+      "match": "sitemap.xml",
+      "cacheControl": "public, max-age=3600"
+    },
+    {
+      "match": "robots.txt",
+      "cacheControl": "public, max-age=3600"
+    }
+  ],
+  "defaults": {
+    "cacheControl": "public, max-age=3600"
+  }
+}

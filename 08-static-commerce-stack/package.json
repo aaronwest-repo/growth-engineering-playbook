@@ -1,0 +1,13 @@
+{
+  "name": "static-commerce-stack",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Public-safe template and simulator for a low-cost static commerce deploy: build → object storage → CDN edge → invalidation → verified live.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/stack.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

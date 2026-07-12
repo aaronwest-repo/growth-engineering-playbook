@@ -166,3 +166,19 @@ jobs:
       - name: Run cart recovery smoke test
         working-directory: 07-cart-recovery-automation
         run: node tests/automation.test.mjs
+
+  static-commerce-stack:
+    name: 08-static-commerce-stack smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run static stack smoke test
+        working-directory: 08-static-commerce-stack
+        run: node tests/stack.test.mjs

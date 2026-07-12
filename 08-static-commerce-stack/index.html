@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Static Commerce Stack - Northstar Outfitters</title>
+    <meta
+      name="description"
+      content="A public-safe template and simulator for a low-cost static commerce deploy: build output, object storage, CDN edge cache, invalidation, and verification — with the cache mistakes made visible."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Crect x='2.5' y='6' width='3' height='4' rx='.6' fill='%234f9cf9'/%3E%3Crect x='6.5' y='6' width='3' height='4' rx='.6' fill='%232fbf87'/%3E%3Crect x='10.5' y='6' width='3' height='4' rx='.6' fill='%23e0a83a'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1720; --panel: #161f2b; --panel-2: #1c2836; --border: #2a3949;
+        --text: #e7edf3; --muted: #93a4b7; --accent: #4f9cf9;
+        --good: #2fbf87; --warn: #e0a83a; --bad: #ec6a5e;
+        --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #1a2a3d, transparent), var(--bg); background-color: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 1080px; margin: 0 auto; padding: 48px 20px 64px; }
+      .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 600; }
+      h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.02em; }
+      .lede { color: var(--muted); max-width: 72ch; margin: 0; font-size: 16px; }
+      h2 { font-size: 19px; margin: 32px 0 4px; }
+      .section-sub { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
+      .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; }
+
+      /* Pipeline */
+      .pipeline { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin: 24px 0 6px; }
+      .node { flex: 1 1 120px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 12px; position: relative; }
+      .node .n-label { font-size: 13px; font-weight: 700; color: #fff; }
+      .node .n-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+      .node.edge { border-color: rgba(224,168,58,.5); }
+      .node.stale .n-badge { color: var(--warn); }
+      .node .n-badge { display: block; font-size: 11px; margin-top: 6px; color: var(--good); font-weight: 600; }
+      .arrow { align-self: center; color: var(--muted); font-size: 18px; flex: 0 0 auto; }
+      @media (max-width: 720px) { .arrow { display: none; } .pipeline { display: grid; grid-template-columns: 1fr 1fr; } }
+
+      .controls { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 22px 0 6px; }
+      @media (max-width: 940px) { .controls { grid-template-columns: repeat(2, 1fr); } }
+      .ctrl label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+      .seg { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+      .seg button { flex: 1; background: transparent; color: var(--muted); border: none; padding: 8px 5px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+      .seg button[aria-pressed="true"] { background: var(--accent); color: #05192f; }
+
+      .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 8px 0 4px; }
+      @media (max-width: 640px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+      .metric { background: var(--panel); padding: 12px 14px; }
+      .metric dt { font-size: 11px; color: var(--muted); margin: 0 0 4px; }
+      .metric dd { margin: 0; font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .lvl-none dd, .lvl-low dd { color: var(--good); } .lvl-medium dd { color: var(--warn); } .lvl-high dd { color: var(--bad); }
+
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+      @media (max-width: 820px) { .grid2 { grid-template-columns: 1fr; } }
+
+      .checklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+      .checklist li { display: grid; grid-template-columns: 74px 1fr; gap: 10px; }
+      .phase { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); padding-top: 2px; }
+      .checklist .label { font-weight: 600; font-size: 14px; }
+      .checklist .detail { color: var(--muted); font-size: 12.5px; }
+
+      .timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+      .timeline li { display: grid; grid-template-columns: 14px 1fr; gap: 10px; }
+      .timeline .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); margin-top: 6px; }
+      .timeline .t-step { font-weight: 600; font-size: 13.5px; }
+      .timeline .t-detail { color: var(--muted); font-size: 12.5px; }
+
+      .risk { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+      .risk:last-child { border-bottom: none; }
+      .risk .sev { flex: 0 0 auto; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 7px; border-radius: 999px; }
+      .sev-high { color: var(--bad); background: rgba(236,106,94,.14); }
+      .sev-medium { color: var(--warn); background: rgba(224,168,58,.14); }
+      .no-risk { color: var(--good); font-size: 13.5px; }
+
+      .plan { font-size: 13px; }
+      .plan h4 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+      .plan ul { margin: 0 0 12px; padding-left: 18px; color: var(--muted); }
+      .plan code { color: var(--text); }
+      .cost-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; border-bottom: 1px solid var(--border); }
+      .cost-row.total { font-weight: 700; border-bottom: none; border-top: 2px solid var(--border); margin-top: 4px; padding-top: 8px; }
+
+      .imgcheck li { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+      .imgcheck li:last-child { border-bottom: none; }
+      .imgcheck code { color: var(--text); } .imgcheck .ok { color: var(--good); } .imgcheck .bad { color: var(--bad); } .imgcheck .warn { color: var(--warn); }
+
+      .tpl-list { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; }
+      .tpl-list li { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; }
+      .tpl-list a { color: var(--accent); }
+      pre { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; overflow: auto; font-size: 12px; color: var(--text); max-height: 320px; }
+      .badge-tpl { font-size: 11px; color: var(--good); border: 1px solid rgba(47,191,135,.4); border-radius: 999px; padding: 1px 8px; }
+
+      .footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+      .footer a { color: var(--accent); }
+      code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: .9em; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Growth Engineering Playbook</p>
+        <h1>Cheap infrastructure still needs discipline</h1>
+        <p class="lede">
+          A public-safe template and simulator for a low-cost static commerce
+          stack: build output → object storage → CDN edge → invalidation →
+          verified live. It shows where "simple" infrastructure quietly breaks —
+          stale caches, missing invalidation, broken image paths, no rollback —
+          and ships illustrative, placeholder-only template files. No real
+          infrastructure, buckets, or credentials.
+        </p>
+      </header>
+
+      <div class="pipeline" id="pipeline" aria-label="Deployment pipeline"></div>
+
+      <div class="controls">
+        <div class="ctrl">
+          <label>Cache TTL</label>
+          <div class="seg" data-control="ttl">
+            <button type="button" data-value="300">5 min</button>
+            <button type="button" data-value="3600" aria-pressed="true">1 hour</button>
+            <button type="button" data-value="86400">24 h</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Deploy type</label>
+          <div class="seg" data-control="deployType">
+            <button type="button" data-value="content" aria-pressed="true">Content</button>
+            <button type="button" data-value="assets">Assets</button>
+            <button type="button" data-value="full">Full</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Invalidation</label>
+          <div class="seg" data-control="invalidation">
+            <button type="button" data-value="none">None</button>
+            <button type="button" data-value="changed" aria-pressed="true">Changed</button>
+            <button type="button" data-value="wildcard">Wildcard</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Image paths</label>
+          <div class="seg" data-control="imageMode">
+            <button type="button" data-value="normalized" aria-pressed="true">Normalized</button>
+            <button type="button" data-value="mixed">Mixed</button>
+            <button type="button" data-value="broken">Broken</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Rollback artifact</label>
+          <div class="seg" data-control="rollback">
+            <button type="button" data-value="yes" aria-pressed="true">Yes</button>
+            <button type="button" data-value="no">No</button>
+          </div>
+        </div>
+      </div>
+
+      <dl class="metrics" id="metrics"></dl>
+
+      <div class="grid2">
+        <section>
+          <h2>Deploy Checklist</h2>
+          <p class="section-sub">Build → sync → invalidate → verify. Skipping the last two is where launches break.</p>
+          <div class="panel"><ul class="checklist" id="checklist"></ul></div>
+        </section>
+        <section>
+          <h2>Cache Timeline</h2>
+          <p class="section-sub">When the edge — and the browser — actually see the new version.</p>
+          <div class="panel"><ul class="timeline" id="timeline"></ul></div>
+        </section>
+      </div>
+
+      <div class="grid2">
+        <section>
+          <h2>Risk Panel</h2>
+          <p class="section-sub">What could serve broken or stale content under the current choices.</p>
+          <div class="panel" id="risks"></div>
+        </section>
+        <section>
+          <h2>Sync, Invalidation &amp; Cost</h2>
+          <p class="section-sub">The plan and its illustrative monthly cost.</p>
+          <div class="panel plan" id="plan"></div>
+        </section>
+      </div>
+
+      <section>
+        <h2>Image Path Check</h2>
+        <p class="section-sub">Example-level pre-deploy check for the classic "images 404 after launch" bug.</p>
+        <div class="panel"><ul class="imgcheck" id="imgcheck"></ul></div>
+      </section>
+
+      <section>
+        <h2>Template Files <span class="badge-tpl">placeholders only</span></h2>
+        <p class="section-sub">Public-safe, illustrative starting points — no real bucket, distribution, account, or domain.</p>
+        <div class="panel">
+          <ul class="tpl-list" id="tplList"></ul>
+          <details>
+            <summary style="cursor:pointer;color:var(--accent);font-size:13px">Preview <code>deploy-static-site.sh</code></summary>
+            <pre id="tplPreview">Loading…</pre>
+          </details>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          Illustrative template + simulator for the fictional <strong>Northstar Outfitters</strong>
+          store. No real infrastructure, credentials, or provider config. Part of the
+          <a href="https://github.com/aaronwest-repo/growth-engineering-playbook" target="_blank" rel="noopener">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
