@@ -163,6 +163,34 @@ Intentional identity messiness baked in (so resolution has something to decide):
 confidence, merges, and consent boundaries live — merge outcomes are
 rule-dependent, not stored.
 
+### Support tickets (`support-tickets.csv`, 148 rows)
+
+Built on an independent RNG stream (`SEED + 7`), *after* customers/orders/emails,
+so extending the ticket corpus never perturbs those datasets. Each ticket carries
+`theme`, `sentiment`, `urgency`, `product_id`, `category`, `status`, `channel`,
+and invented `subject` / `message` / `resolution` text (no real emails, names, or
+brands) so it can be mined by the Customer Support Insight Miner (use case #12).
+
+Intentional patterns baked in (so mining has something to find):
+
+| Pattern | Where |
+|---------|-------|
+| High return friction on one category | `returns` / `exchange` concentrate on **Jackets** |
+| Repeated size-advice clusters | `sizing` on **Shoes** and **Jackets** |
+| Sustainability-claim questions | recycled-material / organic products (recycled polyester, recycled nylon) |
+| Warranty cluster on a product family | **Reusable bottles** (HydraSteel family) |
+| Delivery-status automation candidates | large `delivery` theme, mostly neutral "where is my order" |
+| Negative-sentiment clusters | `damaged`, `missing_package`, `returns` skew negative |
+| Content gaps | `sizing`, `sustainability`, `product_care`, `promo` tagged `content-gap` |
+| Support-risk customers | a handful with 2–4 recent, negative, unresolved tickets + returns |
+
+`themes`: delivery, returns, sizing, compatibility, warranty, payment,
+sustainability, damaged, missing_package, product_care, exchange, promo.
+`sentiment` ∈ {positive, neutral, negative}; `urgency` ∈ {low, medium, high};
+`status` ∈ {open, pending, resolved, closed}. Sentiment/urgency are synthetic
+(rule-weighted per theme), not model-derived. Some tickets are hash-only (no
+`customer_id`), mirroring the identity messiness above.
+
 ## Guarantees for downstream use cases
 
 - Clean files pass strict validation (`scripts/validate-shared-data.py`).

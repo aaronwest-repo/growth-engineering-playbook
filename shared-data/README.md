@@ -36,7 +36,7 @@ shared-data/
     ├── customers.csv           # invented customer profiles (with duplicate identities)
     ├── orders.csv              # invented orders linked to customers
     ├── email-events.csv        # invented email sends/opens/clicks/unsubscribes
-    └── support-tickets.csv     # invented support tickets (themes, sentiment)
+    └── support-tickets.csv     # invented support tickets (themes, sentiment, urgency, text)
 ```
 
 Customers and expanded feed samples are added by later use cases when they need
@@ -78,6 +78,6 @@ check and validation on every push and pull request.
 | `customers/customers.csv` | 80 rows | invented profiles incl. 12 duplicate-identity pairs (same email_hash, conflicting opt-in/consent) |
 | `customers/orders.csv` | 195 rows | invented orders linked to customers |
 | `customers/email-events.csv` | 176 rows | email sends/opens/clicks/unsubscribes (some hash-only or id-only) |
-| `customers/support-tickets.csv` | 18 rows | support tickets (themes, sentiment; some without customer_id) |
+| `customers/support-tickets.csv` | 148 rows | support tickets with theme, sentiment, urgency, product/category, status, channel, and invented subject/message/resolution text for mining; intentional clusters (Jackets return friction, Shoes/Jackets size advice, recycled-material sustainability questions, bottle-family warranty, delivery automation candidates, support-risk repeat customers); some hash-only |
 
 See [DATA_NOTES.md](DATA_NOTES.md) for the intentional messiness catalogue.

@@ -335,8 +335,12 @@ CUSTOMER_FILES = {
     "email-events.csv": ["event_id", "email_hash", "customer_id", "event_type",
                          "occurred_at", "campaign_type", "message_id"],
     "support-tickets.csv": ["ticket_id", "customer_id", "email_hash", "created_at",
-                            "theme", "sentiment", "product_id", "status"],
+                            "theme", "sentiment", "urgency", "product_id", "category",
+                            "status", "channel", "subject", "message", "resolution", "tags"],
 }
+SENTIMENTS = {"positive", "neutral", "negative"}
+URGENCIES = {"low", "medium", "high"}
+TICKET_STATUSES = {"open", "pending", "resolved", "closed"}
 COUNTRIES = {"DE", "AT", "NL", "BE", "LU"}
 
 
@@ -403,13 +407,28 @@ def validate_customers(product_ids: set[str]) -> dict:
         if r.get("customer_id") and r["customer_id"] not in customer_ids:
             fail(f"email-events.csv row {i}: unknown customer_id {r['customer_id']}")
 
+    ticket_ids = set()
     for i, r in enumerate(data["support-tickets.csv"][1], start=2):
+        tid = r.get("ticket_id", "")
+        if not tid or tid in ticket_ids:
+            fail(f"support-tickets.csv row {i}: empty/duplicate ticket_id {tid!r}")
+        ticket_ids.add(tid)
         if r.get("product_id") and r["product_id"] not in product_ids:
             fail(f"support-tickets.csv row {i}: unknown product_id {r['product_id']}")
         if r.get("customer_id") and r["customer_id"] not in customer_ids:
             fail(f"support-tickets.csv row {i}: unknown customer_id {r['customer_id']}")
+        if r.get("email_hash") and not r["email_hash"].startswith("eh_"):
+            fail(f"support-tickets.csv row {i}: email_hash not a synthetic token: {r['email_hash']!r}")
         if not _date_ok(r.get("created_at")):
             fail(f"support-tickets.csv row {i}: bad created_at {r.get('created_at')!r}")
+        if r.get("sentiment") not in SENTIMENTS:
+            fail(f"support-tickets.csv row {i}: bad sentiment {r.get('sentiment')!r}")
+        if r.get("urgency") not in URGENCIES:
+            fail(f"support-tickets.csv row {i}: bad urgency {r.get('urgency')!r}")
+        if r.get("status") not in TICKET_STATUSES:
+            fail(f"support-tickets.csv row {i}: bad status {r.get('status')!r}")
+        if not r.get("theme") or not r.get("subject") or not r.get("message"):
+            fail(f"support-tickets.csv row {i}: missing theme/subject/message")
 
     return counts
 

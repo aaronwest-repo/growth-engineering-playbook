@@ -1,0 +1,13 @@
+{
+  "name": "customer-support-insight-miner",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mine support tickets into operational decisions: theme clusters, sentiment/urgency, product-category friction, content gaps, support-risk customers, automation candidates, and an owner-routed action queue.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/support.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

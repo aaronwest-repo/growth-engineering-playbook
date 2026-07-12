@@ -33,6 +33,7 @@ Wave 1 is live: eight browser-runnable tools, each with source code, a screensho
 | 9 | [`mini-cdp-identity-resolution`](09-mini-cdp-identity-resolution) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/09-mini-cdp-identity-resolution/) | Customer identity resolution: confidence scoring, consent boundaries, false-merge risk, and segment-ready profiles |
 | 10 | [`rfm-segmentation-dashboard`](10-rfm-segmentation-dashboard) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/10-rfm-segmentation-dashboard/) | RFM scoring as a decision layer: return-adjusted value, consent/suppression eligibility, segment explanations, and campaign recommendations |
 | 11 | [`lifecycle-campaign-planner`](11-lifecycle-campaign-planner) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/11-lifecycle-campaign-planner/) | Segment-to-campaign planning: eligibility, suppression, holdouts, margin-aware incentives, timing, measurement, and risk controls |
+| 12 | [`customer-support-insight-miner`](12-customer-support-insight-miner) | Demo-ready | Support tickets as customer intelligence: theme clusters, category friction, content gaps, support-risk customers, automation candidates, and an action queue |
 
 ## Run Philosophy
 

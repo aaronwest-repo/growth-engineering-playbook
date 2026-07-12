@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Customer Support Insight Miner - Northstar Outfitters</title>
+    <meta
+      name="description"
+      content="Mine support tickets into operational decisions: theme clusters, sentiment/urgency, product-category friction, content gaps, support-risk customers, automation candidates, and an owner-routed action queue. Support is customer intelligence, not a cost centre."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Cpath d='M3 4.5h10v6H8l-3 2.5V10.5H3z' fill='none' stroke='%234f9cf9' stroke-width='1.3' stroke-linejoin='round'/%3E%3Ccircle cx='6' cy='7.5' r='.9' fill='%232fbf87'/%3E%3Ccircle cx='8' cy='7.5' r='.9' fill='%23e0a83a'/%3E%3Ccircle cx='10' cy='7.5' r='.9' fill='%23ec6a5e'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1720; --panel: #161f2b; --panel-2: #1c2836; --border: #2a3949;
+        --text: #e7edf3; --muted: #93a4b7; --accent: #4f9cf9;
+        --good: #2fbf87; --warn: #e0a83a; --bad: #ec6a5e;
+        --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #1a2a3d, transparent), var(--bg); background-color: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 1140px; margin: 0 auto; padding: 48px 20px 64px; }
+      .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 600; }
+      h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.02em; }
+      .lede { color: var(--muted); max-width: 76ch; margin: 0; font-size: 16px; }
+      h2 { font-size: 18px; margin: 30px 0 4px; }
+      .section-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 12px; }
+      .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 15px 17px; }
+      .file { font-size: 14px; color: var(--muted); margin-top: 12px; } .file strong { color: #fff; }
+
+      .metrics { display: grid; grid-template-columns: repeat(8, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 22px 0 4px; }
+      @media (max-width: 960px) { .metrics { grid-template-columns: repeat(4, 1fr); } }
+      @media (max-width: 520px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+      .metric { background: var(--panel); padding: 11px 12px; }
+      .metric dt { font-size: 10.5px; color: var(--muted); margin: 0 0 4px; }
+      .metric dd { margin: 0; font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .metric.good dd { color: var(--good); } .metric.warn dd { color: var(--warn); } .metric.bad dd { color: var(--bad); }
+      .metric dd.sm { font-size: 14px; }
+
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+      @media (max-width: 880px) { .grid2 { grid-template-columns: 1fr; } }
+
+      /* Theme clusters */
+      .theme-row { display: grid; grid-template-columns: 128px 1fr 44px; gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 13px; }
+      .theme-row:last-child { border-bottom: none; }
+      .theme-row:hover { background: var(--panel-2); }
+      .theme-row[aria-selected="true"] { background: rgba(79,156,249,.1); }
+      .theme-row .tl { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .sbar { display: flex; height: 12px; border-radius: 3px; overflow: hidden; background: var(--panel-2); }
+      .sbar-neg { background: var(--bad); } .sbar-neu { background: #56708c; } .sbar-pos { background: var(--good); }
+      .theme-row .ct { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+      .hi { color: var(--warn); font-size: 11px; }
+
+      /* Category heatmap */
+      .heat { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+      .heat th, .heat td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: right; font-variant-numeric: tabular-nums; }
+      .heat th { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; }
+      .heat th:first-child, .heat td:first-child { text-align: left; }
+      .heat tbody tr { cursor: pointer; } .heat tbody tr:hover { background: var(--panel-2); }
+      .heat tbody tr[aria-selected="true"] { background: rgba(79,156,249,.1); }
+      .heat .cell { display: inline-block; min-width: 22px; padding: 1px 6px; border-radius: 5px; }
+      .neg-hi { color: var(--bad); font-weight: 700; }
+
+      /* List panels (content gaps / automation) */
+      .ilist { list-style: none; padding: 0; margin: 0; }
+      .ilist li { padding: 10px 0; border-bottom: 1px solid var(--border); }
+      .ilist li:last-child { border-bottom: none; }
+      .ilist .top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+      .ilist .name { font-weight: 600; font-size: 13.5px; }
+      .ilist .cnt { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent); flex: none; }
+      .ilist .desc { color: var(--muted); font-size: 12.5px; margin: 3px 0 0; }
+      .owner { display: inline-block; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; padding: 2px 7px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--border); color: var(--muted); margin-top: 5px; }
+
+      /* Action queue */
+      .aq { width: 100%; border-collapse: collapse; font-size: 13px; }
+      .aq th, .aq td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+      .aq th { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; }
+      .prio { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; }
+      .prio.high { color: var(--bad); background: rgba(236,106,94,.14); }
+      .prio.medium { color: var(--warn); background: rgba(224,168,58,.14); }
+      .prio.low { color: var(--muted); background: rgba(255,255,255,.05); }
+      .aq .sig { font-variant-numeric: tabular-nums; font-weight: 700; text-align: right; }
+
+      /* Customer risk */
+      .risk { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+      .risk th, .risk td { padding: 7px 8px; border-bottom: 1px solid var(--border); text-align: right; font-variant-numeric: tabular-nums; }
+      .risk th { color: var(--muted); font-size: 10.5px; text-transform: uppercase; }
+      .risk th:first-child, .risk td:first-child { text-align: left; }
+      .risk tbody tr { cursor: pointer; } .risk tbody tr:hover { background: var(--panel-2); }
+      .risk tbody tr[aria-selected="true"] { background: rgba(79,156,249,.1); }
+      .risk .flag { color: var(--bad); }
+
+      /* Insight detail */
+      .insight .ihead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+      .insight h3 { margin: 0; font-size: 17px; }
+      .insight .stat { color: var(--muted); font-size: 12.5px; }
+      .insight .why { color: var(--text); font-size: 13.5px; margin: 8px 0 12px; padding-left: 10px; border-left: 3px solid var(--accent); }
+      .snip { border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; margin-bottom: 8px; background: var(--panel-2); }
+      .snip .sh { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+      .snip .subj { font-weight: 600; font-size: 13px; }
+      .snip .meta { font-size: 11px; color: var(--muted); flex: none; }
+      .snip .msg { color: var(--muted); font-size: 12.5px; margin: 4px 0 0; }
+      .snip .prod { font-size: 11px; color: var(--accent); margin-top: 4px; }
+      .tag-neg { color: var(--bad); } .tag-neu { color: var(--muted); } .tag-pos { color: var(--good); }
+
+      .footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+      .footer a { color: var(--accent); }
+      code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: .9em; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Growth Engineering Playbook · Wave 2</p>
+        <h1>What are your support tickets actually telling you?</h1>
+        <p class="lede">
+          Support tickets are not a queue to burn down — they're customer
+          intelligence. This mines the fictional Northstar Outfitters support
+          corpus into operational decisions: theme clusters, sentiment and
+          urgency, product-category friction, content gaps, support-risk
+          customers, automation candidates, and an owner-routed action queue.
+          The expert move is turning recurring tickets into fixes and
+          automations, not counting ticket volume. Deterministic keyword/theme
+          rules, client-side, synthetic identifiers only.
+        </p>
+        <p class="file" id="fileInfo">Loading support, customer, order &amp; product data…</p>
+      </header>
+
+      <dl class="metrics" id="metrics"></dl>
+
+      <div class="grid2">
+        <section>
+          <h2>Theme Clusters</h2>
+          <p class="section-sub">Volume, sentiment mix (red = negative), and urgency. Click a theme for detail.</p>
+          <div class="panel" id="themes"></div>
+        </section>
+        <section>
+          <h2>Product / Category Heatmap</h2>
+          <p class="section-sub">Where friction concentrates — returns, size advice, warranty, care. Click a row.</p>
+          <div class="panel" style="overflow-x:auto" id="heatmap"></div>
+        </section>
+      </div>
+
+      <div class="grid2">
+        <section>
+          <h2>Content Gaps</h2>
+          <p class="section-sub">Recurring questions a better page would deflect — with the owner who fixes it.</p>
+          <div class="panel" id="contentGaps"></div>
+        </section>
+        <section>
+          <h2>Automation Opportunities</h2>
+          <p class="section-sub">Ticket patterns that a workflow or bot could handle end-to-end.</p>
+          <div class="panel" id="automations"></div>
+        </section>
+      </div>
+
+      <section>
+        <h2>Action Queue</h2>
+        <p class="section-sub">The insights turned into owner-routed, prioritised next actions.</p>
+        <div class="panel" style="overflow-x:auto"><table class="aq" id="actions"></table></div>
+      </section>
+
+      <div class="grid2">
+        <section>
+          <h2>Support-Risk Customers</h2>
+          <p class="section-sub">Repeat contacts, negatives, and returns — with a lifecycle recommendation. Click a customer.</p>
+          <div class="panel" style="overflow-x:auto" id="risk"></div>
+        </section>
+        <section>
+          <h2>Insight Detail</h2>
+          <p class="section-sub">Example ticket snippets and why the selected signal matters commercially.</p>
+          <div class="panel insight" id="insight"></div>
+        </section>
+      </div>
+
+      <footer class="footer">
+        <p>
+          Support, customer, order &amp; product data is the fictional
+          <strong>Northstar Outfitters</strong> store from this playbook's
+          <code>shared-data/</code>. Tickets, subjects, and messages are invented —
+          synthetic identifiers only, no real emails or personal data. Sentiment and
+          urgency are rule-based, not model-derived. Client-side, no backend. Part of the
+          <a href="https://github.com/aaronwest-repo/growth-engineering-playbook" target="_blank" rel="noopener">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

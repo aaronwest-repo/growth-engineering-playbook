@@ -737,7 +737,8 @@ ORDER_COLUMNS = ["order_id", "customer_id", "order_date", "channel", "campaign_i
 EMAIL_EVENT_COLUMNS = ["event_id", "email_hash", "customer_id", "event_type",
                        "occurred_at", "campaign_type", "message_id"]
 TICKET_COLUMNS = ["ticket_id", "customer_id", "email_hash", "created_at", "theme",
-                  "sentiment", "product_id", "status"]
+                  "sentiment", "urgency", "product_id", "category", "status",
+                  "channel", "subject", "message", "resolution", "tags"]
 
 FIRST_NAMES = ["Mara", "Jonas", "Lena", "Tomas", "Sofia", "Nils", "Ida", "Kai",
                "Petra", "Lukas", "Anouk", "Bram", "Elin", "Ravi", "Yuki", "Mateo",
@@ -899,6 +900,246 @@ def build_customer_data(products: list[dict], rng: random.Random):
     return customers, orders, emails, tickets
 
 
+# --- Support tickets (Wave 2, case 12) -------------------------------------
+# A richer, deterministic support corpus mined by the Customer Support Insight
+# Miner. Built on its own RNG stream (SEED+7) AFTER customers/orders/emails, so
+# extending it never perturbs the earlier datasets. Intentional patterns are
+# baked in: return friction on Jackets, size-advice clusters on Shoes/Jackets,
+# sustainability questions on recycled materials, a warranty cluster on the
+# bottle family, delivery-status automation candidates, negative clusters, and
+# support-risk customers with several tickets + returns. All invented; no real
+# emails, names, brands, or personal data.
+
+TICKET_CHANNELS = ["email", "chat", "phone", "web_form"]
+
+# theme -> (subjects, messages, resolutions, tags). {title} = product title,
+# {cat} = product category. Text is generic and synthetic; never contains "@".
+TICKET_TEXT = {
+    "delivery": (
+        ["Where is my order?", "Tracking has not updated", "Expected delivery date?"],
+        ["My {title} order shows shipped but tracking has not moved in days. Can you confirm where it is?",
+         "I ordered the {title} last week and still have no delivery update. When will it arrive?"],
+        ["Shared live tracking link and confirmed carrier hand-off; parcel in transit.",
+         "Confirmed delivery window and resent the tracking number."],
+        ["order-tracking", "shipping"],
+    ),
+    "returns": (
+        ["Return request", "How do I return this?", "Return not fitting"],
+        ["The {title} does not fit and I would like to return it. What are the next steps?",
+         "I need to return my {cat} order — the fit was not right. Please start a return."],
+        ["Issued return label and confirmed refund on receipt.",
+         "Return approved; refund processed to original payment method."],
+        ["return", "fit"],
+    ),
+    "sizing": (
+        ["Which size should I order?", "Size advice for {cat}", "Runs small?"],
+        ["I am between sizes on the {title}. Does it run small or large? Any size guidance?",
+         "Not sure which size of the {title} to pick — the size chart is unclear for {cat}."],
+        ["Advised sizing up half a size based on fit feedback; shared measurements.",
+         "Sent detailed size chart and fit notes for the {cat} range."],
+        ["size-advice", "fit"],
+    ),
+    "compatibility": (
+        ["Will this work with my setup?", "Compatibility question", "Does it fit / attach?"],
+        ["Will the {title} be compatible with my existing gear? The product page does not say.",
+         "Trying to confirm the {title} works for my use case before I buy again."],
+        ["Confirmed compatibility and linked the spec section.",
+         "Clarified supported configurations for the {title}."],
+        ["compatibility", "pre-sales"],
+    ),
+    "warranty": (
+        ["Warranty claim", "Is this covered?", "Defect after short use"],
+        ["My {title} developed a fault and I would like to check the warranty terms.",
+         "The {title} stopped performing as expected. Is this covered under warranty?"],
+        ["Logged warranty claim and requested photo evidence for assessment.",
+         "Approved warranty replacement after evidence review."],
+        ["warranty", "quality"],
+    ),
+    "payment": (
+        ["Payment failed", "Card declined at checkout", "Charged twice?"],
+        ["My payment for the {title} failed at checkout even though my card is valid. Help?",
+         "Checkout declined my card twice on the {cat} order. Was I charged?"],
+        ["Confirmed no duplicate charge; guided customer through retry.",
+         "Cleared the failed authorisation and confirmed a single successful charge."],
+        ["payment", "checkout"],
+    ),
+    "sustainability": (
+        ["Is this really recycled?", "Sustainability claim question", "Material sourcing?"],
+        ["The {title} is described as recycled material — can you explain what that actually means?",
+         "I care about sourcing. How recycled is the {title}, and is the claim certified?"],
+        ["Explained recycled content and shared the materials statement.",
+         "Clarified the recycled-material claim and certification scope."],
+        ["sustainability", "claims", "content-gap"],
+    ),
+    "damaged": (
+        ["Arrived damaged", "Item was faulty on arrival", "Broken in the box"],
+        ["My {title} arrived damaged out of the box. I would like a replacement.",
+         "The {cat} item was faulty on arrival — clearly damaged in transit."],
+        ["Arranged free replacement and prepaid return of the damaged item.",
+         "Replacement shipped; flagged packaging issue to logistics."],
+        ["damaged", "quality", "logistics"],
+    ),
+    "missing_package": (
+        ["Package never arrived", "Marked delivered but missing", "Lost parcel"],
+        ["My {title} is marked delivered but I never received it. Please investigate.",
+         "The parcel with my {cat} order is missing though tracking says delivered."],
+        ["Opened carrier investigation and reshipped the order.",
+         "Confirmed loss and issued a replacement shipment."],
+        ["missing-package", "logistics"],
+    ),
+    "product_care": (
+        ["How do I wash this?", "Care instructions", "Maintenance advice"],
+        ["How should I care for the {title}? I want to avoid ruining the {cat} fabric.",
+         "Are there washing or care instructions for the {title}? The label is minimal."],
+        ["Shared care guide and washing recommendations for {cat}.",
+         "Sent maintenance steps to extend the product's life."],
+        ["product-care", "content-gap"],
+    ),
+    "exchange": (
+        ["Exchange for another size", "Swap colour", "Exchange request"],
+        ["I would like to exchange my {title} for a different size — the current one is off.",
+         "Can I exchange the {cat} item for another colour instead of returning it?"],
+        ["Set up an even exchange and shipped the replacement.",
+         "Processed size exchange; original on its way back."],
+        ["exchange", "fit"],
+    ),
+    "promo": (
+        ["Promo code did not work", "Discount confusion", "Why was I not charged the sale price?"],
+        ["The promo code for the {title} did not apply at checkout. Can you help?",
+         "I expected a discount on the {cat} order but was charged full price. Confused about the terms."],
+        ["Applied a one-time adjustment and clarified promo terms.",
+         "Explained promo eligibility and honoured the intended price."],
+        ["promo", "content-gap"],
+    ),
+}
+
+
+def _wchoice(rng: random.Random, options: list, weights: list):
+    x = rng.random() * sum(weights)
+    cum = 0.0
+    for opt, w in zip(options, weights):
+        cum += w
+        if x <= cum:
+            return opt
+    return options[-1]
+
+
+def build_support_tickets(products, customers, orders, rng: random.Random) -> list[dict]:
+    title_by_id = {p["product_id"]: p["title_en"] for p in products}
+    cat_by_id = {p["product_id"]: p["category"] for p in products}
+    by_cat: dict[str, list[str]] = {}
+    for p in products:
+        by_cat.setdefault(p["category"], []).append(p["product_id"])
+    recycled = [p["product_id"] for p in products
+                if "recycled" in p["material"] or "organic" in p["material"]]
+    all_ids = [p["product_id"] for p in products]
+
+    jackets = by_cat.get("Jackets", [])
+    shoes = by_cat.get("Shoes", [])
+    bottles = by_cat.get("Reusable bottles", [])
+    base = by_cat.get("Base layers", [])
+    travel = by_cat.get("Travel gear", [])
+    packs = by_cat.get("Backpacks", [])
+    acc = by_cat.get("Outdoor accessories", [])
+
+    pools = {
+        "delivery": all_ids,
+        "returns": jackets * 3 + shoes + packs,          # return friction concentrates on Jackets
+        "sizing": shoes * 2 + jackets,                   # size advice: Shoes + Jackets
+        "compatibility": travel + packs + acc,
+        "warranty": bottles * 3 + acc,                   # warranty cluster on the bottle family
+        "payment": all_ids,
+        "sustainability": recycled,                      # recycled-material claim questions
+        "damaged": bottles + jackets + packs + travel,
+        "missing_package": all_ids,
+        "product_care": base * 2 + jackets,              # merino care guidance
+        "exchange": jackets + shoes,
+        "promo": all_ids,
+    }
+    # theme -> (count, (pos,neu,neg), (low,med,high))
+    plan = {
+        "delivery":       (18, (0.15, 0.55, 0.30), (0.30, 0.50, 0.20)),
+        "returns":        (16, (0.05, 0.30, 0.65), (0.20, 0.50, 0.30)),
+        "sizing":         (18, (0.10, 0.40, 0.50), (0.50, 0.40, 0.10)),
+        "compatibility":  (8,  (0.10, 0.45, 0.45), (0.40, 0.50, 0.10)),
+        "warranty":       (12, (0.15, 0.45, 0.40), (0.30, 0.50, 0.20)),
+        "payment":        (7,  (0.05, 0.40, 0.55), (0.10, 0.40, 0.50)),
+        "sustainability": (10, (0.35, 0.55, 0.10), (0.70, 0.28, 0.02)),
+        "damaged":        (8,  (0.02, 0.18, 0.80), (0.10, 0.40, 0.50)),
+        "missing_package":(6,  (0.03, 0.22, 0.75), (0.05, 0.35, 0.60)),
+        "product_care":   (9,  (0.30, 0.60, 0.10), (0.70, 0.28, 0.02)),
+        "exchange":       (7,  (0.10, 0.45, 0.45), (0.35, 0.50, 0.15)),
+        "promo":          (5,  (0.08, 0.42, 0.50), (0.40, 0.50, 0.10)),
+    }
+
+    # Customers with a return (for support-risk seeding + realistic pairing).
+    returned_by_cust: dict[str, int] = {}
+    for o in orders:
+        if float(o.get("returned_amount") or 0) > 0:
+            returned_by_cust[o["customer_id"]] = returned_by_cust.get(o["customer_id"], 0) + 1
+    hash_by_cust = {c["customer_id"]: c["email_hash"] for c in customers}
+    cust_ids = [c["customer_id"] for c in customers]
+    base_day = date(2024, 8, 1)
+
+    tickets: list[dict] = []
+
+    def emit(theme, product_id, *, sent_w, urg_w, cust_id=None, hash_only=False,
+             created=None, force_open=False):
+        subjects, messages, resolutions, tags = TICKET_TEXT[theme]
+        title = title_by_id.get(product_id, "product")
+        cat = cat_by_id.get(product_id, "gear")
+        sentiment = _wchoice(rng, SENTIMENTS, list(sent_w))
+        urgency = _wchoice(rng, ["low", "medium", "high"], list(urg_w))
+        if cust_id is None:
+            cust_id = rng.choice(cust_ids)
+        email_hash = hash_by_cust.get(cust_id, _email_hash(rng))
+        # Status: unresolved skews toward negative + high-urgency + forced cases.
+        if force_open or (sentiment == "negative" and urgency == "high"):
+            status = _wchoice(rng, ["open", "pending", "resolved"], [0.5, 0.3, 0.2])
+        else:
+            status = _wchoice(rng, ["open", "pending", "resolved", "closed"], [0.18, 0.12, 0.45, 0.25])
+        resolved = status in ("resolved", "closed")
+        created = created or (base_day + timedelta(days=rng.randint(0, 770)))
+        tickets.append({
+            "ticket_id": f"T-{len(tickets) + 1:05d}",
+            "customer_id": "" if hash_only else cust_id,
+            "email_hash": email_hash,
+            "created_at": created.isoformat(),
+            "theme": theme,
+            "sentiment": sentiment,
+            "urgency": urgency,
+            "product_id": product_id,
+            "category": cat,
+            "status": status,
+            "channel": rng.choice(TICKET_CHANNELS),
+            "subject": rng.choice(subjects).format(title=title, cat=cat),
+            "message": rng.choice(messages).format(title=title, cat=cat),
+            "resolution": (rng.choice(resolutions).format(title=title, cat=cat) if resolved else ""),
+            "tags": ";".join(tags + [sentiment]),
+        })
+
+    # --- Support-risk customers: several tickets + returns, recent + negative.
+    risk_pool = sorted(returned_by_cust, key=lambda c: (-returned_by_cust[c], c))[:8]
+    risk_themes = ["returns", "exchange", "damaged", "sizing"]
+    for cid in risk_pool:
+        for _ in range(rng.randint(2, 4)):
+            theme = rng.choice(risk_themes)
+            prod = rng.choice(pools[theme] or all_ids)
+            created = date(2026, 5, 1) + timedelta(days=rng.randint(0, 130))  # recent
+            emit(theme, prod, sent_w=(0.05, 0.25, 0.70), urg_w=(0.2, 0.4, 0.4),
+                 cust_id=cid, created=created, force_open=True)
+
+    # --- General themed corpus with intentional product/category skews.
+    for theme, (count, sent_w, urg_w) in plan.items():
+        pool = pools[theme] or all_ids
+        for _ in range(count):
+            prod = rng.choice(pool)
+            hash_only = rng.random() < 0.25  # some tickets arrive without a resolved customer_id
+            emit(theme, prod, sent_w=sent_w, urg_w=urg_w, hash_only=hash_only)
+
+    return tickets
+
+
 def write_jsonl(path: Path, rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
@@ -914,7 +1155,10 @@ def main() -> None:
     campaigns_messy = inject_campaign_mess(campaigns, random.Random(SEED + 3))
     aff_clicks, web_events, conversions = build_events(products, random.Random(SEED + 4))
     cart_events = build_cart_events(products, random.Random(SEED + 5))
-    customers, orders, email_events, tickets = build_customer_data(products, random.Random(SEED + 6))
+    customers, orders, email_events, _legacy_tickets = build_customer_data(products, random.Random(SEED + 6))
+    # Support tickets get their own stream so extending them never perturbs the
+    # customer/order/email datasets built above.
+    tickets = build_support_tickets(products, customers, orders, random.Random(SEED + 7))
 
     write_csv(CATALOG_DIR / "products-clean.csv", PRODUCT_COLUMNS, products)
     write_csv(CATALOG_DIR / "products-messy.csv", PRODUCT_COLUMNS, products_messy)
