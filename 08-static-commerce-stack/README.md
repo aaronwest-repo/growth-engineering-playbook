@@ -68,6 +68,9 @@ python3 -m http.server 8000
 # then open http://localhost:8000/08-static-commerce-stack/
 ```
 
+**Live demo:**
+[aaronwest-repo.github.io/growth-engineering-playbook/08-static-commerce-stack](https://aaronwest-repo.github.io/growth-engineering-playbook/08-static-commerce-stack/)
+
 Run the smoke test (also checks the templates are placeholder-only):
 
 ```bash
