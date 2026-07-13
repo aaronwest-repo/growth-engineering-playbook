@@ -18,7 +18,7 @@ Role signal: senior e-commerce / marketing technology work, focused on turning m
 
 ## Use Cases
 
-Wave 1 (experimentation, tracking, AI, automation, infrastructure), Wave 2 (customer data & lifecycle growth), and Wave 3 (content & SEO for the AI era) are complete. Wave 4 is underway with trustworthy measurement and attribution. Every tool ships with source code, a screenshot, a smoke test, and a GitHub Pages demo.
+Wave 1 (experimentation, tracking, AI, automation, infrastructure), Wave 2 (customer data & lifecycle growth), Wave 3 (content & SEO for the AI era), and Wave 4 (trustworthy measurement & attribution) are complete. Every tool ships with source code, a screenshot, a smoke test, and a GitHub Pages demo.
 
 | # | Demo | Status | What it demonstrates |
 |---|------|--------|----------------------|
@@ -44,7 +44,7 @@ Wave 1 (experimentation, tracking, AI, automation, infrastructure), Wave 2 (cust
 | 20 | [`consent-mode-impact-simulator`](20-consent-mode-impact-simulator) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/20-consent-mode-impact-simulator/) | Analytics under-reporting: model consent/ITP/ad-block loss by channel, consent-mode recovery, and the loss decomposed by cause |
 | 21 | [`channel-mix-poas-dashboard`](21-channel-mix-poas-dashboard) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/21-channel-mix-poas-dashboard/) | Profit-not-ROAS channel decisions: per-channel POAS, net contribution, breakeven ROAS, ROAS-trap flags, and an incrementality lens |
 | 22 | [`holdout-vs-observed-lift`](22-holdout-vs-observed-lift) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/22-holdout-vs-observed-lift/) | Incrementality via holdouts: treatment-vs-control lift, a two-proportion z-test with confidence intervals, and reported-vs-incremental ROAS that exposes demand-harvesting channels |
-| 23 | [`server-side-vs-client-tracking`](23-server-side-vs-client-tracking) | Demo-ready | Tracking-architecture capture: client-side loss (ad-block/ITP/beacon), server-side recovery, the consent ceiling no stack beats, and the double-count a naive hybrid reports without event-id dedup |
+| 23 | [`server-side-vs-client-tracking`](23-server-side-vs-client-tracking) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/23-server-side-vs-client-tracking/) | Tracking-architecture capture: client-side loss (ad-block/ITP/beacon), server-side recovery, the consent ceiling no stack beats, and the double-count a naive hybrid reports without event-id dedup |
 
 ## Run Philosophy
 
