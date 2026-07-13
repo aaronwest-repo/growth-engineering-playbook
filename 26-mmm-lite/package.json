@@ -1,0 +1,13 @@
+{
+  "name": "mmm-lite",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A lite marketing mix model: geometric adstock + saturation transforms, grid-searched carryover, an OLS fit that decomposes weekly sales into base vs channels, per-channel ROI and response curves, and the honest caveat that MMM is correlational.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/mmm.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
