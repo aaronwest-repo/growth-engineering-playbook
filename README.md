@@ -34,7 +34,7 @@ Wave 1 is live: eight browser-runnable tools, each with source code, a screensho
 | 10 | [`rfm-segmentation-dashboard`](10-rfm-segmentation-dashboard) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/10-rfm-segmentation-dashboard/) | RFM scoring as a decision layer: return-adjusted value, consent/suppression eligibility, segment explanations, and campaign recommendations |
 | 11 | [`lifecycle-campaign-planner`](11-lifecycle-campaign-planner) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/11-lifecycle-campaign-planner/) | Segment-to-campaign planning: eligibility, suppression, holdouts, margin-aware incentives, timing, measurement, and risk controls |
 | 12 | [`customer-support-insight-miner`](12-customer-support-insight-miner) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/12-customer-support-insight-miner/) | Support tickets as customer intelligence: theme clusters, category friction, content gaps, support-risk customers, automation candidates, and an action queue |
-| 13 | [`recommendation-rules-engine`](13-recommendation-rules-engine) | Demo-ready | Governed product recommendations: blended strategies, business guardrails (in-stock, margin floor, return-risk suppression, diversity), and per-slot explainability |
+| 13 | [`recommendation-rules-engine`](13-recommendation-rules-engine) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/13-recommendation-rules-engine/) | Governed product recommendations: blended strategies, business guardrails (in-stock, margin floor, return-risk suppression, diversity), and per-slot explainability |
 
 ## Run Philosophy
 
