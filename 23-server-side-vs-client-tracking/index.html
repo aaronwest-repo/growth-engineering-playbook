@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Server-side vs Client-side Tracking - Growth Engineering Playbook</title>
+    <meta
+      name="description"
+      content="How much of your event volume do you actually capture? Model client-side loss (ad-block, ITP, beacon-drop), server-side recovery, the consent ceiling no architecture can beat, and the double-count a naive hybrid reports without event-id deduplication."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Crect x='2.5' y='3' width='11' height='4' rx='1' fill='%234f9cf9'/%3E%3Crect x='2.5' y='9' width='11' height='4' rx='1' fill='%232fbf87'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1720; --panel: #161f2b; --panel-2: #1c2836; --border: #2a3949;
+        --text: #e7edf3; --muted: #93a4b7; --accent: #4f9cf9;
+        --good: #2fbf87; --warn: #e0a83a; --bad: #ec6a5e;
+        --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #1a2a3d, transparent), var(--bg); background-color: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 1120px; margin: 0 auto; padding: 48px 20px 64px; }
+      .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 600; }
+      h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.02em; }
+      .lede { color: var(--muted); max-width: 76ch; margin: 0; font-size: 16px; }
+      h2 { font-size: 18px; margin: 30px 0 4px; }
+      .section-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 12px; }
+      .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 15px 17px; }
+
+      .metrics { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 22px 0 4px; }
+      @media (max-width: 900px) { .metrics { grid-template-columns: repeat(4, 1fr); } }
+      @media (max-width: 520px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+      .metric { background: var(--panel); padding: 11px 12px; }
+      .metric dt { font-size: 10.5px; color: var(--muted); margin: 0 0 4px; }
+      .metric dd { margin: 0; font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .metric.good dd { color: var(--good); } .metric.warn dd { color: var(--warn); } .metric.bad dd { color: var(--bad); } .metric.accent dd { color: var(--accent); }
+      .metric dd.sm { font-size: 14px; }
+
+      .controls { display: flex; flex-wrap: wrap; gap: 16px 22px; align-items: flex-end; margin: 22px 0 6px; }
+      .ctrl label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+      .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-wrap: wrap; }
+      .seg button { background: transparent; color: var(--muted); border: none; padding: 7px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+      .seg button[aria-pressed="true"] { background: var(--accent); color: #05192f; }
+      select { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 12.5px; font-weight: 600; }
+
+      .grid2 { display: grid; grid-template-columns: 1.35fr 1fr; gap: 16px; align-items: start; }
+      @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+
+      /* Capture bars vs true volume */
+      .bar-row { display: grid; grid-template-columns: 150px 1fr 118px; gap: 10px; align-items: center; padding: 8px 0; font-size: 13px; }
+      .bar-ch { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .bar-track { position: relative; height: 24px; background: var(--panel-2); border-radius: 5px; overflow: hidden; }
+      .bar-fill { position: absolute; top: 0; bottom: 0; left: 0; background: var(--accent); border-radius: 5px 0 0 5px; }
+      .bar-fill.over { background: repeating-linear-gradient(45deg, var(--bad), var(--bad) 6px, #c9564b 6px, #c9564b 12px); }
+      .bar-ceiling { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--warn); }
+      .bar-val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+      .bar-val .sub { color: var(--muted); font-weight: 400; font-size: 11px; }
+      .bar-legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 12px; }
+      .swatch { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; }
+      .swatch.cap { background: var(--accent); } .swatch.ceil { background: var(--warn); } .swatch.over { background: var(--bad); }
+
+      /* Waterfall drill-down */
+      .wf-row { display: grid; grid-template-columns: 128px 1fr 92px; gap: 10px; align-items: center; padding: 5px 0; font-size: 12.5px; }
+      .wf-lab { color: var(--muted); } .wf-lab.keep { color: var(--text); font-weight: 600; }
+      .wf-track { position: relative; height: 16px; background: var(--panel-2); border-radius: 4px; overflow: hidden; }
+      .wf-fill { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 4px; }
+      .wf-fill.keep { background: var(--good); } .wf-fill.step { background: #3a4a5c; }
+      .wf-val { text-align: right; font-variant-numeric: tabular-nums; }
+      .wf-lost { color: var(--bad); } .wf-lost.rec { color: var(--warn); }
+      .callout { margin-top: 12px; padding: 11px 13px; border-radius: 9px; font-size: 13px; }
+      .callout.good { background: rgba(47,191,135,.1); border: 1px solid rgba(47,191,135,.3); }
+      .callout.bad { background: rgba(236,106,94,.1); border: 1px solid rgba(236,106,94,.3); }
+      .callout.warn { background: rgba(224,168,58,.1); border: 1px solid rgba(224,168,58,.3); }
+      .callout b { color: var(--text); }
+
+      /* Table */
+      .tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+      .tbl th, .tbl td { padding: 8px 8px; border-bottom: 1px solid var(--border); text-align: right; font-variant-numeric: tabular-nums; }
+      .tbl th:first-child, .tbl td:first-child { text-align: left; }
+      .tbl th { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; }
+      .tbl th.sorted { color: var(--accent); }
+      .tbl tbody tr:hover { background: var(--panel-2); }
+      .tbl .ch { font-weight: 600; }
+
+      .insight { font-size: 13.5px; } .insight b { color: var(--text); }
+      .footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+      .footer a { color: var(--accent); }
+      code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: .9em; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Growth Engineering Playbook · Wave 4</p>
+        <h1>Your analytics sees barely half of what happens.</h1>
+        <p class="lede">
+          Client-side tags lose events to ad-block, ITP and cookie expiry, and
+          beacons that never fire — and the loss is biased by browser and device,
+          so it quietly distorts every channel number. Server-side tracking wins
+          most of that back, but it is <strong>not a consent workaround</strong>,
+          and running client and server together <strong>double-counts</strong>
+          unless you dedup on a shared event id. This models the fictional
+          Northstar Outfitters traffic through each architecture, draws the consent
+          ceiling no stack can beat, and separates the loss you can recover from
+          the loss that's gone regardless. Deterministic, client-side.
+        </p>
+        <p class="section-sub" id="fileInfo" style="margin-top:12px">Loading traffic model…</p>
+      </header>
+
+      <dl class="metrics" id="metrics"></dl>
+
+      <div class="controls">
+        <div class="ctrl">
+          <label>Architecture</label>
+          <div class="seg" data-control="arch">
+            <button type="button" data-value="client">Client-side</button>
+            <button type="button" data-value="server">Server-side</button>
+            <button type="button" data-value="hybrid" aria-pressed="true">Hybrid (deduped)</button>
+            <button type="button" data-value="naive">Hybrid (no dedup)</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Sort by</label>
+          <div class="seg" data-control="sort">
+            <button type="button" data-value="recovery" aria-pressed="true">Server recovery</button>
+            <button type="button" data-value="loss">Client loss</button>
+            <button type="button" data-value="volume">Volume</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <section>
+          <h2 id="barsTitle">Events captured vs what actually happened</h2>
+          <p class="section-sub" id="barsSub">Blue = captured under the selected architecture. Amber line = the consent ceiling (the most any stack can legally see).</p>
+          <div class="panel">
+            <div id="bars"></div>
+            <div class="bar-legend">
+              <span><span class="swatch cap"></span>Captured</span>
+              <span><span class="swatch ceil"></span>Consent ceiling</span>
+              <span><span class="swatch over"></span>Double-counted (no dedup)</span>
+            </div>
+          </div>
+        </section>
+        <section>
+          <h2>Where the client loses events</h2>
+          <p class="section-sub">One segment's client-side loss, step by step.
+            <select id="segSelect" aria-label="Choose a segment"></select>
+          </p>
+          <div class="panel"><div id="waterfall"></div><div id="wfCallout"></div></div>
+        </section>
+      </div>
+
+      <section>
+        <h2>Capture by segment</h2>
+        <p class="section-sub">Client-side is lossy and the loss is uneven; server-side recovers the technical loss but never the consent loss. The last column is what a naive hybrid would over-report.</p>
+        <div class="panel" style="overflow-x:auto"><table class="tbl" id="table"></table></div>
+      </section>
+
+      <section>
+        <h2>The Decision</h2>
+        <div class="panel insight" id="insight"></div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          The five traffic segments are the fictional <strong>Northstar Outfitters</strong> profile in
+          <code>scenarios.js</code> (true event volume + per-cause loss rates) — invented, no real analytics
+          data or PII. Client capture = consent × (1−ad-block)(1−ITP)(1−beacon); server capture = consent ×
+          (1−server-error); deduped hybrid is the union; naive hybrid sums the two. Part of the
+          <a href="https://github.com/aaronwest-repo/growth-engineering-playbook" target="_blank" rel="noopener">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

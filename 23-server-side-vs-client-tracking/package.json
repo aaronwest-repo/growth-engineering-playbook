@@ -1,0 +1,13 @@
+{
+  "name": "server-side-vs-client-tracking",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Model how much true event volume each tracking architecture captures: client-side loss (ad-block/ITP/beacon), server-side recovery, the consent ceiling no stack can beat, and the double-count a naive hybrid reports without event-id dedup.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/tracking.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

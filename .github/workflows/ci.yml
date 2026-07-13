@@ -406,3 +406,19 @@ jobs:
       - name: Run holdout-vs-observed lift smoke test
         working-directory: 22-holdout-vs-observed-lift
         run: node tests/lift.test.mjs
+
+  server-side-vs-client-tracking:
+    name: 23-server-side-vs-client-tracking smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run server-side vs client-side tracking smoke test
+        working-directory: 23-server-side-vs-client-tracking
+        run: node tests/tracking.test.mjs
