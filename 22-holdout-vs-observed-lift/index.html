@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Holdout vs Observed Lift - Growth Engineering Playbook</title>
+    <meta
+      name="description"
+      content="Incrementality, not reported numbers: turn holdout experiments into true lift with a two-proportion z-test, confidence intervals, and reported-vs-incremental ROAS. See which channels cause conversions and which just harvest demand that was coming anyway."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Crect x='2.5' y='4' width='4.4' height='9' rx='.6' fill='%232a3949'/%3E%3Crect x='2.5' y='9' width='4.4' height='4' rx='.6' fill='%232fbf87'/%3E%3Crect x='9.1' y='7' width='4.4' height='6' rx='.6' fill='%234f9cf9'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1720; --panel: #161f2b; --panel-2: #1c2836; --border: #2a3949;
+        --text: #e7edf3; --muted: #93a4b7; --accent: #4f9cf9;
+        --good: #2fbf87; --warn: #e0a83a; --bad: #ec6a5e;
+        --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #1a2a3d, transparent), var(--bg); background-color: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 1120px; margin: 0 auto; padding: 48px 20px 64px; }
+      .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 600; }
+      h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.02em; }
+      .lede { color: var(--muted); max-width: 76ch; margin: 0; font-size: 16px; }
+      h2 { font-size: 18px; margin: 30px 0 4px; }
+      .section-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 12px; }
+      .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 15px 17px; }
+
+      .metrics { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 22px 0 4px; }
+      @media (max-width: 900px) { .metrics { grid-template-columns: repeat(4, 1fr); } }
+      @media (max-width: 520px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+      .metric { background: var(--panel); padding: 11px 12px; }
+      .metric dt { font-size: 10.5px; color: var(--muted); margin: 0 0 4px; }
+      .metric dd { margin: 0; font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .metric.good dd { color: var(--good); } .metric.warn dd { color: var(--warn); } .metric.bad dd { color: var(--bad); }
+      .metric dd.sm { font-size: 14px; }
+
+      .controls { display: flex; flex-wrap: wrap; gap: 16px 22px; align-items: flex-end; margin: 22px 0 6px; }
+      .ctrl label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+      .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-wrap: wrap; }
+      .seg button { background: transparent; color: var(--muted); border: none; padding: 7px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+      .seg button[aria-pressed="true"] { background: var(--accent); color: #05192f; }
+      select { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 12.5px; font-weight: 600; }
+
+      .grid2 { display: grid; grid-template-columns: 1.35fr 1fr; gap: 16px; align-items: start; }
+      @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+
+      /* Stacked baseline+incremental bars */
+      .bar-row { display: grid; grid-template-columns: 128px 1fr 96px; gap: 10px; align-items: center; padding: 7px 0; font-size: 13px; }
+      .bar-ch { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .bar-track { position: relative; height: 22px; background: var(--panel-2); border-radius: 5px; overflow: hidden; display: flex; }
+      .bar-base { background: repeating-linear-gradient(45deg, #33445720, #33445720 5px, #2a394940 5px, #2a394940 10px); border-right: 1px solid var(--border); }
+      .bar-inc { background: var(--good); }
+      .bar-inc.neg { background: var(--bad); }
+      .bar-val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+      .bar-legend { display: flex; gap: 16px; font-size: 12px; color: var(--muted); margin-top: 10px; }
+      .swatch { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; }
+      .swatch.base { background: #33445780; border: 1px solid var(--border); } .swatch.inc { background: var(--good); }
+
+      /* z-test detail */
+      .kv { display: grid; grid-template-columns: 1fr auto; gap: 7px 12px; font-size: 13.5px; }
+      .kv dt { color: var(--muted); } .kv dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+      .rate-viz { position: relative; height: 30px; margin: 6px 0 2px; }
+      .rate-bar { position: absolute; height: 12px; border-radius: 3px; top: 0; }
+      .rate-bar.ctrl { background: var(--muted); top: 16px; }
+      .rate-bar.treat { background: var(--accent); }
+      .rate-lab { font-size: 10.5px; color: var(--muted); }
+      .callout { margin-top: 12px; padding: 11px 13px; border-radius: 9px; font-size: 13px; }
+      .callout.good { background: rgba(47,191,135,.1); border: 1px solid rgba(47,191,135,.3); }
+      .callout.bad { background: rgba(236,106,94,.1); border: 1px solid rgba(236,106,94,.3); }
+      .callout.warn { background: rgba(224,168,58,.1); border: 1px solid rgba(224,168,58,.3); }
+      .callout.muted { background: var(--panel-2); border: 1px solid var(--border); }
+      .callout b { color: var(--text); }
+
+      /* Table */
+      .tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+      .tbl th, .tbl td { padding: 8px 8px; border-bottom: 1px solid var(--border); text-align: right; font-variant-numeric: tabular-nums; }
+      .tbl th:first-child, .tbl td:first-child { text-align: left; }
+      .tbl th { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; }
+      .tbl tbody tr:hover { background: var(--panel-2); }
+      .tbl .ch { font-weight: 600; }
+      .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-weight: 700; font-size: 11px; }
+      .pill.good { color: var(--good); background: rgba(47,191,135,.14); }
+      .pill.warn { color: var(--warn); background: rgba(224,168,58,.14); }
+      .pill.bad { color: var(--bad); background: rgba(236,106,94,.14); }
+      .pill.muted { color: var(--muted); background: var(--panel-2); }
+
+      .insight { font-size: 13.5px; } .insight b { color: var(--text); }
+      .footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+      .footer a { color: var(--accent); }
+      code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: .9em; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Growth Engineering Playbook · Wave 4</p>
+        <h1>The channel reported the sale. It didn't cause it.</h1>
+        <p class="lede">
+          Every platform reports the conversions it touched — but touching a sale
+          isn't causing it. The only honest way to know what your spend actually
+          added is a <strong>holdout</strong>: withhold the campaign from a random
+          control group and measure the gap. This turns seven fictional Northstar
+          Outfitters holdout tests into true incremental lift — a two-proportion
+          z-test with confidence intervals, and <strong>reported-vs-incremental
+          ROAS</strong> — so demand-harvesting channels stop taking credit for
+          sales that were coming anyway. Deterministic, client-side.
+        </p>
+        <p class="section-sub" id="fileInfo" style="margin-top:12px">Loading experiments…</p>
+      </header>
+
+      <dl class="metrics" id="metrics"></dl>
+
+      <div class="controls">
+        <div class="ctrl">
+          <label>Confidence level</label>
+          <div class="seg" data-control="conf">
+            <button type="button" data-value="90">90%</button>
+            <button type="button" data-value="95" aria-pressed="true">95%</button>
+            <button type="button" data-value="99">99%</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Bars show</label>
+          <div class="seg" data-control="view">
+            <button type="button" data-value="conversions" aria-pressed="true">Conversions</button>
+            <button type="button" data-value="revenue">Revenue</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Sort by</label>
+          <div class="seg" data-control="sort">
+            <button type="button" data-value="incrementality" aria-pressed="true">Incrementality</button>
+            <button type="button" data-value="iroas">Incr. ROAS</button>
+            <button type="button" data-value="gap">ROAS gap</button>
+            <button type="button" data-value="spend">Spend</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <section>
+          <h2 id="barsTitle">What the spend actually caused</h2>
+          <p class="section-sub" id="barsSub">Hatched = baseline the control group converted anyway. Solid green = true incremental lift.</p>
+          <div class="panel">
+            <div id="bars"></div>
+            <div class="bar-legend">
+              <span><span class="swatch base"></span>Baseline (would have happened)</span>
+              <span><span class="swatch inc"></span>Incremental (caused by spend)</span>
+            </div>
+          </div>
+        </section>
+        <section>
+          <h2>Is the lift even real?</h2>
+          <p class="section-sub">One experiment's holdout, tested.
+            <select id="expSelect" aria-label="Choose an experiment"></select>
+          </p>
+          <div class="panel"><dl class="kv" id="detail"></dl><div id="detailCallout"></div></div>
+        </section>
+      </div>
+
+      <section>
+        <h2>Reported vs incremental, by channel</h2>
+        <p class="section-sub">Reported ROAS is what the dashboard shows. Incremental ROAS is what the holdout proves. The verdict is the two-proportion z-test at your confidence level.</p>
+        <div class="panel" style="overflow-x:auto"><table class="tbl" id="table"></table></div>
+      </section>
+
+      <section>
+        <h2>The Decision</h2>
+        <div class="panel insight" id="insight"></div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          The seven holdout tests are the fictional <strong>Northstar Outfitters</strong> mix in
+          <code>experiments.js</code> (treatment/control users + conversions, spend, revenue) — invented, no real
+          brands or PII. Incremental lift = treatment rate − control rate; significance is a two-proportion
+          z-test; incremental ROAS values the lift at each channel's average order value. Part of the
+          <a href="https://github.com/aaronwest-repo/growth-engineering-playbook" target="_blank" rel="noopener">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

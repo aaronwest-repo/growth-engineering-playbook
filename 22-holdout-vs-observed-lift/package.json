@@ -1,0 +1,13 @@
+{
+  "name": "holdout-vs-observed-lift",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Turn holdout (incrementality) experiments into honest lift: treatment-vs-control conversion rates, a two-proportion z-test with confidence intervals, and reported-vs-incremental ROAS that exposes demand-harvesting channels.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/lift.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
