@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Attribution Model Comparator - Growth Engineering Playbook</title>
+    <meta
+      name="description"
+      content="Score the same conversions with five attribution models — first-click, last-click, linear, position-based, time-decay — and watch the credit shift between channels. Shows last-click bias, per-model channel totals, and how any single journey splits. Deterministic."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Ccircle cx='3.5' cy='8' r='1.6' fill='%234f9cf9'/%3E%3Ccircle cx='8' cy='8' r='1.6' fill='%23e0a83a'/%3E%3Ccircle cx='12.5' cy='8' r='1.9' fill='%232fbf87'/%3E%3Cpath d='M5 8h1.5M9.6 8H11' stroke='%23415066' stroke-width='1.2'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1720; --panel: #161f2b; --panel-2: #1c2836; --border: #2a3949;
+        --text: #e7edf3; --muted: #93a4b7; --accent: #4f9cf9;
+        --good: #2fbf87; --warn: #e0a83a; --bad: #ec6a5e;
+        --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #1a2a3d, transparent), var(--bg); background-color: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 1120px; margin: 0 auto; padding: 48px 20px 64px; }
+      .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 600; }
+      h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.02em; }
+      .lede { color: var(--muted); max-width: 76ch; margin: 0; font-size: 16px; }
+      h2 { font-size: 18px; margin: 30px 0 4px; }
+      .section-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 12px; }
+      .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 15px 17px; }
+
+      .metrics { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 22px 0 4px; }
+      @media (max-width: 900px) { .metrics { grid-template-columns: repeat(4, 1fr); } }
+      @media (max-width: 520px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+      .metric { background: var(--panel); padding: 11px 12px; }
+      .metric dt { font-size: 10.5px; color: var(--muted); margin: 0 0 4px; }
+      .metric dd { margin: 0; font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .metric.good dd { color: var(--good); } .metric.warn dd { color: var(--warn); } .metric.bad dd { color: var(--bad); }
+      .metric dd.sm { font-size: 14px; }
+
+      .controls { display: flex; flex-wrap: wrap; gap: 16px 22px; align-items: flex-end; margin: 22px 0 6px; }
+      .ctrl label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+      .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-wrap: wrap; }
+      .seg button { background: transparent; color: var(--muted); border: none; padding: 7px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+      .seg button[aria-pressed="true"] { background: var(--accent); color: #05192f; }
+      select { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px 11px; font-size: 13.5px; min-width: 280px; }
+
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+      @media (max-width: 880px) { .grid2 { grid-template-columns: 1fr; } }
+
+      /* Comparison table */
+      .cmp { width: 100%; border-collapse: collapse; font-size: 13px; }
+      .cmp th, .cmp td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: right; font-variant-numeric: tabular-nums; }
+      .cmp th:first-child, .cmp td:first-child { text-align: left; }
+      .cmp th { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; }
+      .cmp col.hi, .cmp th.hi { background: rgba(79,156,249,.10); }
+      .cmp td.hi { background: rgba(79,156,249,.10); font-weight: 700; }
+      .cmp .ch { font-weight: 600; }
+      .cmp tbody tr:hover { background: var(--panel-2); }
+      .swing { color: var(--warn); font-size: 11px; }
+
+      /* Winner / bias */
+      .win { list-style: none; padding: 0; margin: 0; }
+      .win li { display: grid; grid-template-columns: 120px 1fr auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+      .win li:last-child { border-bottom: none; }
+      .win .bar { height: 9px; border-radius: 4px; background: var(--panel-2); overflow: hidden; }
+      .win .bar > span { display: block; height: 100%; background: var(--accent); }
+      .win .val { font-variant-numeric: tabular-nums; color: var(--muted); }
+
+      .bias { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+      .bias li { display: grid; grid-template-columns: 120px 1fr 60px; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+      .bias li:last-child { border-bottom: none; }
+      .bias .track { position: relative; height: 10px; background: var(--panel-2); border-radius: 5px; }
+      .bias .mid { position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--border); }
+      .bias .fill { position: absolute; top: 0; bottom: 0; border-radius: 5px; }
+      .bias .fill.pos { left: 50%; background: var(--bad); } .bias .fill.neg { right: 50%; background: var(--good); }
+      .bias .d { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+      .bias .d.pos { color: var(--bad); } .bias .d.neg { color: var(--good); }
+      .bias-note { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+
+      /* Journey explorer */
+      .path { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 6px 0 14px; }
+      .chip { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--border); }
+      .chip.first { border-color: var(--accent); color: var(--accent); } .chip.last { border-color: var(--good); color: var(--good); }
+      .arr { color: var(--muted); }
+      .jt { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+      .jt th, .jt td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: right; font-variant-numeric: tabular-nums; }
+      .jt th:first-child, .jt td:first-child { text-align: left; }
+      .jt th { color: var(--muted); font-size: 10.5px; text-transform: uppercase; }
+      .jt .z { color: var(--border); }
+
+      .footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+      .footer a { color: var(--accent); }
+      code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: .9em; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Growth Engineering Playbook · Wave 4</p>
+        <h1>Which channel gets the credit? It depends on the model.</h1>
+        <p class="lede">
+          Attribution is a choice, not a truth. This rebuilds each conversion's
+          channel journey for the fictional Northstar Outfitters store and scores it
+          five ways — first-click, last-click, linear, position-based, and
+          time-decay. The same revenue, redistributed: last-click flatters the
+          closer, first-click flatters the introducer. Watch the credit move,
+          measure the last-click bias channel by channel, and open any journey to
+          see exactly how each model splits it. Deterministic, client-side — the
+          model is a decision you should make on purpose, not an invisible default.
+        </p>
+        <p class="section-sub" id="fileInfo" style="margin-top:12px">Loading event data…</p>
+      </header>
+
+      <dl class="metrics" id="metrics"></dl>
+
+      <div class="controls">
+        <div class="ctrl">
+          <label>Primary model (highlighted column)</label>
+          <div class="seg" data-control="model">
+            <button type="button" data-value="first">First-click</button>
+            <button type="button" data-value="last" aria-pressed="true">Last-click</button>
+            <button type="button" data-value="linear">Linear</button>
+            <button type="button" data-value="position">Position</button>
+            <button type="button" data-value="time_decay">Time-decay</button>
+          </div>
+        </div>
+      </div>
+
+      <section>
+        <h2>Credited Revenue by Channel × Model</h2>
+        <p class="section-sub">The same €<span id="revInline">—</span> in conversions, allocated five ways. Watch a channel's credit swing across the row.</p>
+        <div class="panel" style="overflow-x:auto"><table class="cmp" id="cmp"></table></div>
+      </section>
+
+      <div class="grid2">
+        <section>
+          <h2>Channel Share — <span id="winModel">Last-click</span></h2>
+          <p class="section-sub">How the primary model splits total credit across channels.</p>
+          <div class="panel"><ul class="win" id="winners"></ul></div>
+        </section>
+        <section>
+          <h2>Last-Click Bias</h2>
+          <p class="section-sub">Share under last-click minus first-click. Right (red) = a closer last-click over-credits; left (green) = an introducer it under-credits.</p>
+          <div class="panel"><ul class="bias" id="bias"></ul><p class="bias-note" id="biasNote"></p></div>
+        </section>
+      </div>
+
+      <section>
+        <h2>Journey Explorer</h2>
+        <p class="section-sub">Pick a conversion and see how every model splits its value across the touches.</p>
+        <div class="panel">
+          <div style="margin-bottom:6px"><select id="journeySelect" aria-label="Select a conversion journey"></select></div>
+          <div class="path" id="journeyPath"></div>
+          <table class="jt" id="journeyTable"></table>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          Journeys are reconstructed from the fictional <strong>Northstar Outfitters</strong>
+          web-event and conversion streams in <code>shared-data/events/</code> — consecutive
+          same-channel touches are collapsed, and a competing-channel click is treated as a
+          closing touch. Synthetic data only; no personal data. The sample's multi-touch set
+          is modest, so single-channel conversions look the same across models by design.
+          Client-side, no backend. Part of the
+          <a href="https://github.com/aaronwest-repo/growth-engineering-playbook" target="_blank" rel="noopener">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "attribution-model-comparator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Reconstruct multi-touch conversion journeys and score them with five attribution models (first/last/linear/position/time-decay) to show how credit shifts between channels, with last-click bias and per-journey splits.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/attribution.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
