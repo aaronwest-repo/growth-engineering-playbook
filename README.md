@@ -40,7 +40,7 @@ Wave 1 (experimentation, tracking, AI, automation, infrastructure), Wave 2 (cust
 | 16 | [`schema-markup-generator`](16-schema-markup-generator) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/16-schema-markup-generator/) | JSON-LD generator + validator (Product/Article/FAQ/Breadcrumb/Organization): required vs recommended fields, format/enum linting, and rich-result eligibility from clean or messy data |
 | 17 | [`seo-tech-auditor`](17-seo-tech-auditor) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/17-seo-tech-auditor/) | Technical-SEO crawl audit: broken links, redirect chains, canonical/title/meta issues, noindex on key pages, orphan pages, and missing schema — scored and prioritised by severity |
 | 18 | [`internal-linking-optimizer`](18-internal-linking-optimizer) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/18-internal-linking-optimizer/) | Topical-authority link graph: topic clustering, pillar/orphan detection, and specific from→to internal-link recommendations with a reason and keyword-overlap strength |
-| 19 | [`attribution-model-comparator`](19-attribution-model-comparator) | Demo-ready | Multi-touch attribution: score conversions with five models (first/last/linear/position/time-decay), quantify last-click bias, and split any journey channel by channel |
+| 19 | [`attribution-model-comparator`](19-attribution-model-comparator) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/19-attribution-model-comparator/) | Multi-touch attribution: score conversions with five models (first/last/linear/position/time-decay), quantify last-click bias, and split any journey channel by channel |
 
 ## Run Philosophy
 
