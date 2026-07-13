@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LTV / CAC / Payback Calculator - Growth Engineering Playbook</title>
+    <meta
+      name="description"
+      content="Realised contribution-margin LTV from real order data, grouped by acquisition channel, against a documented CAC table — LTV:CAC ratios, payback periods, and the revenue-vs-contribution gap that flatters every channel."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Cpath d='M2.5 12.5 L6 7 L9 9.5 L13.5 3.5' fill='none' stroke='%232fbf87' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1720; --panel: #161f2b; --panel-2: #1c2836; --border: #2a3949;
+        --text: #e7edf3; --muted: #93a4b7; --accent: #4f9cf9;
+        --good: #2fbf87; --warn: #e0a83a; --bad: #ec6a5e;
+        --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #1a2a3d, transparent), var(--bg); background-color: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 1120px; margin: 0 auto; padding: 48px 20px 64px; }
+      .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 600; }
+      h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.02em; }
+      .lede { color: var(--muted); max-width: 76ch; margin: 0; font-size: 16px; }
+      h2 { font-size: 18px; margin: 30px 0 4px; }
+      .section-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 12px; }
+      .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 15px 17px; }
+
+      .metrics { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 22px 0 4px; }
+      @media (max-width: 900px) { .metrics { grid-template-columns: repeat(4, 1fr); } }
+      @media (max-width: 520px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+      .metric { background: var(--panel); padding: 11px 12px; }
+      .metric dt { font-size: 10.5px; color: var(--muted); margin: 0 0 4px; }
+      .metric dd { margin: 0; font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .metric.good dd { color: var(--good); } .metric.warn dd { color: var(--warn); } .metric.bad dd { color: var(--bad); } .metric.accent dd { color: var(--accent); }
+      .metric dd.sm { font-size: 14px; }
+
+      .controls { display: flex; flex-wrap: wrap; gap: 16px 22px; align-items: flex-end; margin: 22px 0 6px; }
+      .ctrl label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+      .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-wrap: wrap; }
+      .seg button { background: transparent; color: var(--muted); border: none; padding: 7px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+      .seg button[aria-pressed="true"] { background: var(--accent); color: #05192f; }
+      select { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 12.5px; font-weight: 600; }
+
+      .grid2 { display: grid; grid-template-columns: 1.35fr 1fr; gap: 16px; align-items: start; }
+      @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+
+      /* LTV:CAC ratio bars */
+      .bar-row { display: grid; grid-template-columns: 116px 1fr 132px; gap: 10px; align-items: center; padding: 8px 0; font-size: 13px; }
+      .bar-ch { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .bar-track { position: relative; height: 22px; background: var(--panel-2); border-radius: 5px; overflow: hidden; }
+      .bar-fill { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 5px; }
+      .bar-fill.good { background: var(--good); } .bar-fill.warn { background: var(--warn); } .bar-fill.bad { background: var(--bad); }
+      .bar-thresh { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--text); opacity: .55; }
+      .bar-thresh::after { content: "3:1"; position: absolute; top: -14px; left: -8px; font-size: 9px; color: var(--muted); }
+      .bar-val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+      .bar-val .sub { color: var(--muted); font-weight: 400; font-size: 11px; }
+      .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 12px; }
+      .swatch { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; }
+      .swatch.good { background: var(--good); } .swatch.warn { background: var(--warn); } .swatch.bad { background: var(--bad); }
+
+      /* Payback curve (SVG) */
+      .curve-wrap { position: relative; }
+      .kv { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-size: 13px; margin-top: 12px; }
+      .kv dt { color: var(--muted); } .kv dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+      .callout { margin-top: 12px; padding: 11px 13px; border-radius: 9px; font-size: 13px; }
+      .callout.good { background: rgba(47,191,135,.1); border: 1px solid rgba(47,191,135,.3); }
+      .callout.warn { background: rgba(224,168,58,.1); border: 1px solid rgba(224,168,58,.3); }
+      .callout.bad { background: rgba(236,106,94,.1); border: 1px solid rgba(236,106,94,.3); }
+      .callout b { color: var(--text); }
+
+      /* Table */
+      .tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+      .tbl th, .tbl td { padding: 8px 8px; border-bottom: 1px solid var(--border); text-align: right; font-variant-numeric: tabular-nums; }
+      .tbl th:first-child, .tbl td:first-child { text-align: left; }
+      .tbl th { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; }
+      .tbl th.sorted { color: var(--accent); }
+      .tbl tbody tr:hover { background: var(--panel-2); }
+      .tbl .ch { font-weight: 600; }
+      .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-weight: 700; font-size: 11px; }
+      .pill.good { color: var(--good); background: rgba(47,191,135,.14); }
+      .pill.warn { color: var(--warn); background: rgba(224,168,58,.14); }
+      .pill.bad { color: var(--bad); background: rgba(236,106,94,.14); }
+
+      .insight { font-size: 13.5px; } .insight b { color: var(--text); }
+      .footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+      .footer a { color: var(--accent); }
+      code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: .9em; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Growth Engineering Playbook · Wave 5</p>
+        <h1>The LTV in your deck is probably revenue in disguise.</h1>
+        <p class="lede">
+          "LTV:CAC of 8" only means something if the LTV is <strong>contribution
+          margin</strong> — revenue minus discounts, returns, and cost of goods —
+          not gross revenue, which flatters every channel. This computes realised
+          per-customer contribution from the real Northstar Outfitters order data,
+          groups customers by <strong>how they were acquired</strong>, and puts it
+          next to a documented CAC table to get the LTV:CAC ratio and payback
+          period — flagging the channels that look fine on revenue but are
+          marginal on profit. Toggle revenue vs contribution to see the gap.
+          Deterministic, client-side.
+        </p>
+        <p class="section-sub" id="fileInfo" style="margin-top:12px">Loading order data…</p>
+      </header>
+
+      <dl class="metrics" id="metrics"></dl>
+
+      <div class="controls">
+        <div class="ctrl">
+          <label>LTV basis</label>
+          <div class="seg" data-control="basis">
+            <button type="button" data-value="contribution" aria-pressed="true">Contribution</button>
+            <button type="button" data-value="revenue">Revenue</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Group by</label>
+          <div class="seg" data-control="groupBy">
+            <button type="button" data-value="channel" aria-pressed="true">Acquisition channel</button>
+            <button type="button" data-value="tier">Loyalty tier</button>
+            <button type="button" data-value="country">Country</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Sort by</label>
+          <div class="seg" data-control="sort">
+            <button type="button" data-value="ltvCac" aria-pressed="true">LTV:CAC</button>
+            <button type="button" data-value="payback">Payback</button>
+            <button type="button" data-value="netProfit">Net profit</button>
+            <button type="button" data-value="customers">Customers</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <section>
+          <h2 id="barsTitle">LTV:CAC by acquisition channel</h2>
+          <p class="section-sub">The line is the <strong>3:1</strong> rule of thumb. Green clears it; amber is marginal; red loses money on every acquisition.</p>
+          <div class="panel">
+            <div id="bars"></div>
+            <div class="legend">
+              <span><span class="swatch good"></span>Healthy (≥3:1)</span>
+              <span><span class="swatch warn"></span>Marginal / slow payback</span>
+              <span><span class="swatch bad"></span>Acquired at a loss</span>
+            </div>
+          </div>
+        </section>
+        <section>
+          <h2>Payback</h2>
+          <p class="section-sub">How long one segment takes to earn back its CAC.
+            <select id="segSelect" aria-label="Choose a segment"></select>
+          </p>
+          <div class="panel"><div class="curve-wrap"><svg id="curve" viewBox="0 0 340 170" width="100%" preserveAspectRatio="xMidYMid meet"></svg></div><dl class="kv" id="segKv"></dl><div id="segCallout"></div></div>
+        </section>
+      </div>
+
+      <section>
+        <h2 id="tableTitle">Unit economics by segment</h2>
+        <p class="section-sub">Realised contribution to date — not a projection. Small segments are labelled with their customer count so you can see where the numbers are thin.</p>
+        <div class="panel" style="overflow-x:auto"><table class="tbl" id="table"></table></div>
+      </section>
+
+      <section>
+        <h2>The Decision</h2>
+        <div class="panel insight" id="insight"></div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          LTV is computed from the real <strong>Northstar Outfitters</strong> orders in
+          <code>shared-data/customers/</code> (contribution = revenue − discounts − returns − cost of goods − shipping cost),
+          grouped by each customer's first-order channel. CAC per channel lives in <code>cac.js</code> as documented
+          planning assumptions, not measured spend. Realised, historical contribution — forward projection is a separate
+          tool. Synthetic data, no PII. Part of the
+          <a href="https://github.com/aaronwest-repo/growth-engineering-playbook" target="_blank" rel="noopener">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

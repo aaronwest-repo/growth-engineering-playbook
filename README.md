@@ -18,7 +18,7 @@ Role signal: senior e-commerce / marketing technology work, focused on turning m
 
 ## Use Cases
 
-Wave 1 (experimentation, tracking, AI, automation, infrastructure), Wave 2 (customer data & lifecycle growth), Wave 3 (content & SEO for the AI era), and Wave 4 (trustworthy measurement & attribution) are complete. Every tool ships with source code, a screenshot, a smoke test, and a GitHub Pages demo.
+Waves 1–4 are complete — experimentation & tracking, customer data & lifecycle growth, content & SEO for the AI era, and trustworthy measurement & attribution. Wave 5 is underway with growth planning and unit economics. Every tool ships with source code, a screenshot, a smoke test, and a GitHub Pages demo.
 
 | # | Demo | Status | What it demonstrates |
 |---|------|--------|----------------------|
@@ -45,6 +45,7 @@ Wave 1 (experimentation, tracking, AI, automation, infrastructure), Wave 2 (cust
 | 21 | [`channel-mix-poas-dashboard`](21-channel-mix-poas-dashboard) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/21-channel-mix-poas-dashboard/) | Profit-not-ROAS channel decisions: per-channel POAS, net contribution, breakeven ROAS, ROAS-trap flags, and an incrementality lens |
 | 22 | [`holdout-vs-observed-lift`](22-holdout-vs-observed-lift) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/22-holdout-vs-observed-lift/) | Incrementality via holdouts: treatment-vs-control lift, a two-proportion z-test with confidence intervals, and reported-vs-incremental ROAS that exposes demand-harvesting channels |
 | 23 | [`server-side-vs-client-tracking`](23-server-side-vs-client-tracking) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/23-server-side-vs-client-tracking/) | Tracking-architecture capture: client-side loss (ad-block/ITP/beacon), server-side recovery, the consent ceiling no stack beats, and the double-count a naive hybrid reports without event-id dedup |
+| 24 | [`ltv-cac-payback-calculator`](24-ltv-cac-payback-calculator) | Demo-ready | Unit economics from real orders: contribution-margin LTV by acquisition channel, LTV:CAC vs the 3:1 rule, payback period, and the revenue-vs-contribution gap that flatters every channel |
 
 ## Run Philosophy
 

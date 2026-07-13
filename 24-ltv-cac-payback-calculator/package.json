@@ -1,0 +1,13 @@
+{
+  "name": "ltv-cac-payback-calculator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Realised contribution-margin LTV from real order data, grouped by acquisition channel, against a documented CAC table — with LTV:CAC ratios, payback periods, and the revenue-vs-contribution gap that flatters every channel.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/ltv.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
