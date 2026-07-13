@@ -1,0 +1,13 @@
+{
+  "name": "marketing-budget-allocator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Allocate a marketing budget across channels by equalising marginal return under diminishing-returns response curves — water-filling optimisation, current-vs-optimal uplift, and the profit-maximising budget where the marginal euro stops paying for itself.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/allocator.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
