@@ -1,0 +1,13 @@
+{
+  "name": "internal-linking-optimizer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cluster a content set into topics, find orphans and under-linked pillars, and recommend specific internal links with a reason and keyword-overlap strength — topical-authority engineering, deterministic and inspectable.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/linking.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

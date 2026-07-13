@@ -39,6 +39,7 @@ Wave 1 (experimentation, tracking, AI, automation, infrastructure) and Wave 2 (c
 | 15 | [`geo-content-checker`](15-geo-content-checker) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/15-geo-content-checker/) | Answer-engine (AEO) content audit: answer-first structure, extractable definitions, quotable sentences, schema hints, and the sentences an AI would quote |
 | 16 | [`schema-markup-generator`](16-schema-markup-generator) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/16-schema-markup-generator/) | JSON-LD generator + validator (Product/Article/FAQ/Breadcrumb/Organization): required vs recommended fields, format/enum linting, and rich-result eligibility from clean or messy data |
 | 17 | [`seo-tech-auditor`](17-seo-tech-auditor) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/17-seo-tech-auditor/) | Technical-SEO crawl audit: broken links, redirect chains, canonical/title/meta issues, noindex on key pages, orphan pages, and missing schema — scored and prioritised by severity |
+| 18 | [`internal-linking-optimizer`](18-internal-linking-optimizer) | Demo-ready | Topical-authority link graph: topic clustering, pillar/orphan detection, and specific from→to internal-link recommendations with a reason and keyword-overlap strength |
 
 ## Run Philosophy
 

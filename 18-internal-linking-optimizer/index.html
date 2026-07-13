@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Internal Linking Optimizer - Growth Engineering Playbook</title>
+    <meta
+      name="description"
+      content="Turn a content set into a topical-authority link graph: cluster pages by topic, find orphans and under-linked pillars, and recommend specific internal links (from → to) with a reason and a similarity strength. Deterministic, inspectable."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Ccircle cx='4' cy='4.5' r='1.7' fill='%234f9cf9'/%3E%3Ccircle cx='12' cy='4.5' r='1.7' fill='%232fbf87'/%3E%3Ccircle cx='8' cy='12' r='1.9' fill='%23e0a83a'/%3E%3Cpath d='M4.8 5.6L7.2 10.6M11.2 5.6L8.8 10.6M5.4 4.5h5.2' stroke='%23415066' stroke-width='1'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1720; --panel: #161f2b; --panel-2: #1c2836; --border: #2a3949;
+        --text: #e7edf3; --muted: #93a4b7; --accent: #4f9cf9;
+        --good: #2fbf87; --warn: #e0a83a; --bad: #ec6a5e;
+        --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #1a2a3d, transparent), var(--bg); background-color: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 1120px; margin: 0 auto; padding: 48px 20px 64px; }
+      .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 600; }
+      h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.02em; }
+      .lede { color: var(--muted); max-width: 76ch; margin: 0; font-size: 16px; }
+      h2 { font-size: 18px; margin: 30px 0 4px; }
+      .section-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 12px; }
+      .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 15px 17px; }
+
+      .metrics { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 22px 0 4px; }
+      @media (max-width: 900px) { .metrics { grid-template-columns: repeat(4, 1fr); } }
+      @media (max-width: 520px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+      .metric { background: var(--panel); padding: 11px 12px; }
+      .metric dt { font-size: 10.5px; color: var(--muted); margin: 0 0 4px; }
+      .metric dd { margin: 0; font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .metric.good dd { color: var(--good); } .metric.warn dd { color: var(--warn); } .metric.bad dd { color: var(--bad); }
+
+      .controls { display: flex; flex-wrap: wrap; gap: 14px 20px; align-items: flex-end; margin: 22px 0 6px; }
+      .ctrl label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+      .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-wrap: wrap; }
+      .seg button { background: transparent; color: var(--muted); border: none; padding: 7px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+      .seg button[aria-pressed="true"] { background: var(--accent); color: #05192f; }
+      select { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px 11px; font-size: 14px; min-width: 220px; }
+
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+      @media (max-width: 880px) { .grid2 { grid-template-columns: 1fr; } }
+
+      /* Clusters */
+      .cl-list { list-style: none; padding: 0; margin: 0; }
+      .cl-list li { padding: 10px 8px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 7px; }
+      .cl-list li:last-child { border-bottom: none; }
+      .cl-list li:hover { background: var(--panel-2); }
+      .cl-list li[aria-selected="true"] { background: rgba(79,156,249,.1); }
+      .cl-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+      .cl-name { font-weight: 700; font-size: 13.5px; }
+      .cl-h { font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
+      .cl-h.ok { color: var(--good); background: rgba(47,191,135,.14); } .cl-h.bad { color: var(--warn); background: rgba(224,168,58,.14); }
+      .cl-sub { color: var(--muted); font-size: 12px; margin-top: 3px; }
+      .cl-sub b { color: var(--text); }
+
+      /* Orphans */
+      .orph { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+      .orph li { padding: 8px 0; border-bottom: 1px solid var(--border); }
+      .orph li:last-child { border-bottom: none; }
+      .orph .t { font-weight: 600; }
+      .orph .rec { color: var(--muted); font-size: 12px; margin-top: 2px; }
+      .orph .rec b { color: var(--accent); }
+
+      /* Suggestions table */
+      .tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+      .tbl th, .tbl td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+      .tbl th { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; }
+      .tbl tbody tr { cursor: pointer; } .tbl tbody tr:hover { background: var(--panel-2); }
+      .arrow { color: var(--muted); }
+      .rtag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+      .rtag.orphan_fix { color: var(--bad); background: rgba(236,106,94,.14); }
+      .rtag.link_to_pillar, .rtag.pillar_to_member { color: var(--accent); background: rgba(79,156,249,.14); }
+      .rtag.related_content { color: var(--warn); background: rgba(224,168,58,.14); }
+      .str { font-variant-numeric: tabular-nums; font-weight: 700; }
+      .terms { color: var(--muted); font-size: 11px; }
+      .url { font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; color: var(--muted); }
+
+      /* Page detail */
+      .pd-meta { display: grid; grid-template-columns: 92px 1fr; gap: 4px 12px; font-size: 13px; margin: 0 0 12px; }
+      .pd-meta dt { color: var(--muted); font-size: 11.5px; }
+      .pd-meta dd { margin: 0; }
+      .lnk { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+      .lnk li { padding: 6px 0; border-bottom: 1px solid var(--border); }
+      .lnk li:last-child { border-bottom: none; }
+      .add { color: var(--good); font-weight: 700; margin-right: 6px; }
+
+      .footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+      .footer a { color: var(--accent); }
+      code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: .9em; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Growth Engineering Playbook · Wave 3</p>
+        <h1>Turn a pile of pages into a topical-authority graph</h1>
+        <p class="lede">
+          Internal linking is how a site builds topical authority and passes
+          equity between pages — not an afterthought "related posts" widget. This
+          maps a sample content set for the fictional Northstar Outfitters site into
+          topic clusters, finds the gaps that quietly cap rankings — orphan pages
+          with no inbound links, pillars their own cluster barely links to, and
+          highly-related pages that were never connected — and recommends specific
+          internal links (from → to) with a reason and a keyword-overlap strength.
+          Similarity is inspectable overlap, not a black-box embedding. Deterministic,
+          client-side; the corpus is a bundled fixture.
+        </p>
+      </header>
+
+      <dl class="metrics" id="metrics"></dl>
+
+      <div class="controls">
+        <div class="ctrl">
+          <label for="clusterSelect">Cluster</label>
+          <select id="clusterSelect" autocomplete="off" aria-label="Filter by cluster"><option value="all">All clusters</option></select>
+        </div>
+        <div class="ctrl">
+          <label>Suggestion type</label>
+          <div class="seg" data-control="reason">
+            <button type="button" data-value="all" aria-pressed="true">All</button>
+            <button type="button" data-value="orphan_fix">Fix orphans</button>
+            <button type="button" data-value="pillar">Pillar links</button>
+            <button type="button" data-value="related_content">Related</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <section>
+          <h2>Topic Clusters</h2>
+          <p class="section-sub">Each cluster's pillar, size, and health. Click to focus the suggestions below.</p>
+          <div class="panel"><ul class="cl-list" id="clusters"></ul></div>
+        </section>
+        <section>
+          <h2>Orphan Pages</h2>
+          <p class="section-sub">Indexable pages with zero inbound internal links — and where to link them from.</p>
+          <div class="panel"><ul class="orph" id="orphans"></ul></div>
+        </section>
+      </div>
+
+      <section>
+        <h2 id="sugTitle">Link Suggestions</h2>
+        <p class="section-sub">Specific internal links to add, ranked by priority then keyword-overlap strength. Click a row for the page.</p>
+        <div class="panel" style="overflow-x:auto"><table class="tbl" id="suggestions"></table></div>
+      </section>
+
+      <section>
+        <h2>Page Detail</h2>
+        <p class="section-sub">The selected page's cluster, current links, and the links to add.</p>
+        <div class="panel" id="detail"></div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          The corpus is a bundled sample of invented Northstar Outfitters pages — no
+          real domains or personal data. Similarity is keyword-overlap (Jaccard);
+          swap in your own content graph in practice. Deterministic, client-side. Part of the
+          <a href="https://github.com/aaronwest-repo/growth-engineering-playbook" target="_blank" rel="noopener">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

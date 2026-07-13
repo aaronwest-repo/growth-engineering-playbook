@@ -326,3 +326,19 @@ jobs:
       - name: Run technical-SEO auditor smoke test
         working-directory: 17-seo-tech-auditor
         run: node tests/seo.test.mjs
+
+  internal-linking-optimizer:
+    name: 18-internal-linking-optimizer smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run internal-linking optimizer smoke test
+        working-directory: 18-internal-linking-optimizer
+        run: node tests/linking.test.mjs
