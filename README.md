@@ -42,6 +42,7 @@ Wave 1 (experimentation, tracking, AI, automation, infrastructure), Wave 2 (cust
 | 18 | [`internal-linking-optimizer`](18-internal-linking-optimizer) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/18-internal-linking-optimizer/) | Topical-authority link graph: topic clustering, pillar/orphan detection, and specific from→to internal-link recommendations with a reason and keyword-overlap strength |
 | 19 | [`attribution-model-comparator`](19-attribution-model-comparator) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/19-attribution-model-comparator/) | Multi-touch attribution: score conversions with five models (first/last/linear/position/time-decay), quantify last-click bias, and split any journey channel by channel |
 | 20 | [`consent-mode-impact-simulator`](20-consent-mode-impact-simulator) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/20-consent-mode-impact-simulator/) | Analytics under-reporting: model consent/ITP/ad-block loss by channel, consent-mode recovery, and the loss decomposed by cause |
+| 21 | [`channel-mix-poas-dashboard`](21-channel-mix-poas-dashboard) | Demo-ready | Profit-not-ROAS channel decisions: per-channel POAS, net contribution, breakeven ROAS, ROAS-trap flags, and an incrementality lens |
 
 ## Run Philosophy
 

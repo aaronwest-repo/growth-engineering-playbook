@@ -1,0 +1,13 @@
+{
+  "name": "channel-mix-poas-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Reframe the channel mix around POAS (profit on ad spend) and net contribution instead of ROAS, with a breakeven line and an incrementality lens — decision-quality measurement, not channel reporting.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/poas.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

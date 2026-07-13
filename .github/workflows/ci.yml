@@ -374,3 +374,19 @@ jobs:
       - name: Run consent-mode impact simulator smoke test
         working-directory: 20-consent-mode-impact-simulator
         run: node tests/consent.test.mjs
+
+  channel-mix-poas-dashboard:
+    name: 21-channel-mix-poas-dashboard smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run channel-mix POAS dashboard smoke test
+        working-directory: 21-channel-mix-poas-dashboard
+        run: node tests/poas.test.mjs
