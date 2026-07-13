@@ -72,6 +72,10 @@
       .tbl th { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; cursor: pointer; }
       .tbl tbody tr:hover { background: var(--panel-2); }
       .tbl tr.bad td { color: var(--bad); }
+      .tbl th.sorted { color: var(--accent); }
+      .tbl th.sorted::after { content: " ▼"; font-size: 9px; }
+      .tbl th.sorted, .tbl td.sorted { background: rgba(79,156,249,.10); }
+      .tbl-note { font-size: 12.5px; color: var(--muted); margin: 10px 2px 0; }
       .tbl .ch { font-weight: 600; }
       .poas-pill { display: inline-block; padding: 1px 7px; border-radius: 999px; font-weight: 700; }
       .poas-pill.ok { color: var(--good); background: rgba(47,191,135,.14); } .poas-pill.no { color: var(--bad); background: rgba(236,106,94,.14); }

@@ -90,8 +90,10 @@ function renderChannels(d) {
   const key = options.incremental && options.rankBy === "contribution" ? "incContribution" : options.rankBy;
   const rows = d.rows.slice().sort((a, b) => b[key] - a[key]);
   const incCol = options.incremental;
+  const sc = (col) => (col === key ? " sorted" : ""); // highlight the sorted column
+  const contribKey = incCol ? "incContribution" : "contribution";
   $("channels").innerHTML = `<thead><tr>
-      <th>Channel</th><th>Spend</th><th>Revenue</th><th>ROAS</th><th>POAS</th><th>Contribution</th>${incCol ? "<th>Incremental</th>" : ""}<th>CPA</th>
+      <th>Channel</th><th>Spend</th><th>Revenue</th><th class="${sc("roas").trim()}">ROAS</th><th class="${sc("poas").trim()}">POAS</th><th class="${sc("contribution").trim()}">Contribution</th>${incCol ? `<th class="${sc("incContribution").trim()}">Incremental</th>` : ""}<th>CPA</th>
     </tr></thead><tbody>${rows.map((r) => {
     const bad = options.incremental ? !r.incProfitable : !r.profitable;
     const trap = r.roas >= 1.5 && r.poas < 1;
@@ -99,13 +101,19 @@ function renderChannels(d) {
       <td class="ch">${esc(cap(r.channel))}${trap ? ' <span class="roas-trap">ROAS trap</span>' : ""}</td>
       <td>${eur(r.spend)}</td>
       <td>${eur(r.revenue)}</td>
-      <td>${r.roas}×</td>
-      <td><span class="poas-pill ${r.poas >= 1 ? "ok" : "no"}">${r.poas}×</span></td>
-      <td>${eur(r.contribution)}</td>
-      ${incCol ? `<td>${eur(r.incContribution)}</td>` : ""}
+      <td class="${sc("roas")}">${r.roas}×</td>
+      <td class="${sc("poas")}"><span class="poas-pill ${r.poas >= 1 ? "ok" : "no"}">${r.poas}×</span></td>
+      <td class="${sc("contribution")}">${eur(r.contribution)}</td>
+      ${incCol ? `<td class="${sc("incContribution")}">${eur(r.incContribution)}</td>` : ""}
       <td>${eur(r.cpa)}</td>
     </tr>`;
   }).join("")}</tbody>`;
+  const note = (options.rankBy === "roas" || options.rankBy === "poas")
+    ? `Sorted by <strong>${esc(RANK_FIELDS[options.rankBy])}</strong>. ROAS and POAS rank the channels identically here — margins are near-uniform (~43%), so POAS is just ROAS scaled. They diverge in <em>value</em> and the <em>breakeven test</em>, not the order. Switch to <strong>Net contribution</strong> to see the ranking change.`
+    : `Sorted by <strong>${esc(RANK_FIELDS[key] || RANK_FIELDS[options.rankBy])}</strong> — note the order differs from ROAS/POAS: high-return channels aren't always the biggest profit engines.`;
+  let noteEl = document.getElementById("tblNote");
+  if (!noteEl) { noteEl = document.createElement("p"); noteEl.id = "tblNote"; noteEl.className = "tbl-note"; $("channels").parentElement.appendChild(noteEl); }
+  noteEl.innerHTML = note;
 }
 
 function renderInsight(d) {
