@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Free-Shipping Threshold Calculator - Northstar Outfitters</title>
+    <meta
+      name="description"
+      content="Find the margin-aware free-shipping threshold from your own basket distribution. Models subsidy, basket nudging, and conversion lift; shows the break-even conversion rate and contrasts the naive revenue-uplift story with real net contribution. A margin decision, not a round number."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Cpath d='M2 11h3l1-5h7l1 4' fill='none' stroke='%234f9cf9' stroke-width='1.3' stroke-linejoin='round' stroke-linecap='round'/%3E%3Ccircle cx='6' cy='12.5' r='1.1' fill='%232fbf87'/%3E%3Ccircle cx='12' cy='12.5' r='1.1' fill='%232fbf87'/%3E%3Cpath d='M11.5 3.5l1.5 1.5 2.5-2.5' fill='none' stroke='%23e0a83a' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1720; --panel: #161f2b; --panel-2: #1c2836; --border: #2a3949;
+        --text: #e7edf3; --muted: #93a4b7; --accent: #4f9cf9;
+        --good: #2fbf87; --warn: #e0a83a; --bad: #ec6a5e;
+        --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #1a2a3d, transparent), var(--bg); background-color: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 1120px; margin: 0 auto; padding: 48px 20px 64px; }
+      .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 600; }
+      h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.02em; }
+      .lede { color: var(--muted); max-width: 76ch; margin: 0; font-size: 16px; }
+      h2 { font-size: 18px; margin: 30px 0 4px; }
+      .section-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 12px; }
+      .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 15px 17px; }
+      .file { font-size: 14px; color: var(--muted); margin-top: 12px; } .file strong { color: #fff; }
+
+      .metrics { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 22px 0 4px; }
+      @media (max-width: 900px) { .metrics { grid-template-columns: repeat(4, 1fr); } }
+      @media (max-width: 520px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+      .metric { background: var(--panel); padding: 11px 12px; }
+      .metric dt { font-size: 10.5px; color: var(--muted); margin: 0 0 4px; }
+      .metric dd { margin: 0; font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .metric.good dd { color: var(--good); } .metric.warn dd { color: var(--warn); } .metric.bad dd { color: var(--bad); }
+
+      .controls { display: flex; flex-wrap: wrap; gap: 16px 22px; align-items: flex-end; margin: 22px 0 6px; }
+      .ctrl label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+      .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+      .seg button { background: transparent; color: var(--muted); border: none; padding: 7px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+      .seg button[aria-pressed="true"] { background: var(--accent); color: #05192f; }
+      .thr { min-width: 280px; }
+      .thr .val { font-size: 20px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+      .thr .rec { font-size: 11px; color: var(--good); }
+      input[type=range] { width: 100%; accent-color: var(--accent); }
+
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+      @media (max-width: 880px) { .grid2 { grid-template-columns: 1fr; } }
+
+      /* Distribution histogram */
+      .hist { display: flex; align-items: flex-end; gap: 4px; height: 150px; margin-top: 6px; }
+      .hist .col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; }
+      .hist .bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--panel-2); }
+      .hist .bar.far { background: #3a4a5c; } .hist .bar.nudge { background: var(--warn); } .hist .bar.qual { background: var(--accent); }
+      .hist .lab { font-size: 9.5px; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+      .hist .cnt { font-size: 10px; color: var(--muted); margin-bottom: 3px; font-variant-numeric: tabular-nums; }
+      .legend { display: flex; gap: 14px; margin-top: 10px; font-size: 11.5px; color: var(--muted); }
+      .legend .k { display: inline-flex; align-items: center; gap: 5px; }
+      .legend .sw { width: 10px; height: 10px; border-radius: 2px; }
+
+      /* Sweep chart */
+      .sweep { display: flex; align-items: stretch; gap: 5px; height: 160px; margin-top: 6px; }
+      .sweep .col { flex: 1; display: flex; flex-direction: column; cursor: pointer; }
+      .sweep .top, .sweep .bot { flex: 1; display: flex; align-items: flex-end; justify-content: center; }
+      .sweep .bot { align-items: flex-start; }
+      .sweep .b { width: 78%; border-radius: 3px; }
+      .sweep .b.pos { background: var(--good); } .sweep .b.neg { background: var(--bad); }
+      .sweep .col[aria-selected="true"] .b { outline: 2px solid var(--text); }
+      .sweep .col.recommended .b { box-shadow: 0 0 0 2px var(--accent); }
+      .sweep .axis { border-top: 1px dashed var(--border); }
+      .sweep .lab { font-size: 9px; color: var(--muted); text-align: center; margin-top: 3px; font-variant-numeric: tabular-nums; }
+      .sweep-note { font-size: 11.5px; color: var(--muted); margin-top: 8px; }
+
+      /* Economics */
+      .econ { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+      .econ td { padding: 7px 4px; border-bottom: 1px solid var(--border); }
+      .econ td:last-child { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+      .econ tr:last-child td { border-bottom: none; }
+      .econ .net td { font-size: 15px; padding-top: 10px; }
+      .econ .pos { color: var(--good); } .econ .neg { color: var(--bad); } .econ .muted { color: var(--muted); font-weight: 400; }
+
+      /* Wrong vs right */
+      .wr { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .wr .card { border: 1px solid var(--border); border-radius: 10px; padding: 13px; }
+      .wr .card.wrong { border-color: rgba(236,106,94,.4); }
+      .wr .card.right { border-color: rgba(47,191,135,.5); }
+      .wr .h { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+      .wr .num { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; margin: 4px 0; }
+      .wr .wrong .num { color: var(--bad); } .wr .right .num { color: var(--good); }
+      .wr .exp { font-size: 12px; color: var(--muted); }
+      .wr-foot { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+
+      /* Warnings */
+      .warn-list { list-style: none; padding: 0; margin: 0; }
+      .warn-list li { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+      .warn-list li:last-child { border-bottom: none; }
+      .wtag { flex: none; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 3px 8px; border-radius: 999px; color: var(--warn); background: rgba(224,168,58,.14); }
+      .wtag.loss, .wtag.unwinnable, .wtag.margin { color: var(--bad); background: rgba(236,106,94,.14); }
+      .warn-none { color: var(--good); font-size: 13.5px; }
+
+      .footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+      .footer a { color: var(--accent); }
+      code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: .9em; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Growth Engineering Playbook · Wave 2</p>
+        <h1>Where should free shipping kick in — without losing money?</h1>
+        <p class="lede">
+          A margin-aware free-shipping threshold calculator, built on the fictional
+          Northstar Outfitters order history. It models the three groups a threshold
+          actually moves — orders you now subsidise, orders that nudge their basket
+          up, and the conversion lift free shipping buys — then finds the threshold
+          that maximises <em>contribution</em>, shows the conversion lift you'd need
+          to break even, and contrasts the flattering "revenue uplift" story with the
+          real number. The threshold is a margin decision, not a round number, and
+          the answer is only as good as the two behaviour assumptions — so they're
+          controls, shown with their sensitivity. Deterministic, client-side, order
+          data only.
+        </p>
+        <p class="file" id="fileInfo">Loading order data…</p>
+      </header>
+
+      <dl class="metrics" id="metrics"></dl>
+
+      <div class="controls">
+        <div class="ctrl thr">
+          <label for="thrRange">Free-shipping threshold: <span class="val" id="thrVal">€200</span> <span class="rec" id="thrRec"></span></label>
+          <input type="range" id="thrRange" min="100" max="325" step="25" value="200" aria-label="Free-shipping threshold" />
+        </div>
+        <div class="ctrl">
+          <label>Nudge rate</label>
+          <div class="seg" data-control="nudge">
+            <button type="button" data-value="low">Low</button>
+            <button type="button" data-value="med" aria-pressed="true">Med</button>
+            <button type="button" data-value="high">High</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Conversion lift</label>
+          <div class="seg" data-control="conv">
+            <button type="button" data-value="off">Off</button>
+            <button type="button" data-value="4%">4%</button>
+            <button type="button" data-value="8%" aria-pressed="true">8%</button>
+            <button type="button" data-value="12%">12%</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Within reach</label>
+          <div class="seg" data-control="window">
+            <button type="button" data-value="€15">€15</button>
+            <button type="button" data-value="€25" aria-pressed="true">€25</button>
+            <button type="button" data-value="€40">€40</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Shipping cost</label>
+          <div class="seg" data-control="shipping">
+            <button type="button" data-value="€5" aria-pressed="true">€5</button>
+            <button type="button" data-value="€8">€8</button>
+            <button type="button" data-value="€12">€12</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <section>
+          <h2>Basket Distribution</h2>
+          <p class="section-sub">Where orders sit vs the threshold — subsidised, within reach, or too far below.</p>
+          <div class="panel">
+            <div class="hist" id="hist"></div>
+            <div class="legend">
+              <span class="k"><span class="sw" style="background:#3a4a5c"></span>Far below</span>
+              <span class="k"><span class="sw" style="background:var(--warn)"></span>Within reach (nudge)</span>
+              <span class="k"><span class="sw" style="background:var(--accent)"></span>Qualifies (subsidised)</span>
+            </div>
+          </div>
+        </section>
+        <section>
+          <h2>Threshold Sweep</h2>
+          <p class="section-sub">Net contribution vs baseline at each threshold. Click a bar to select it.</p>
+          <div class="panel">
+            <div class="sweep" id="sweep"></div>
+            <p class="sweep-note" id="sweepNote"></p>
+          </div>
+        </section>
+      </div>
+
+      <div class="grid2">
+        <section>
+          <h2>Scenario Economics</h2>
+          <p class="section-sub">The margin math at the selected threshold — every effect, netted out.</p>
+          <div class="panel"><table class="econ" id="econ"></table></div>
+        </section>
+        <section>
+          <h2>The Number Most Teams Calculate Wrong</h2>
+          <p class="section-sub">Revenue "uplift" vs real contribution — same policy, two very different stories.</p>
+          <div class="panel">
+            <div class="wr" id="wrongRight"></div>
+            <p class="wr-foot" id="wrFoot"></p>
+          </div>
+        </section>
+      </div>
+
+      <section>
+        <h2>Warnings</h2>
+        <p class="section-sub">Where this threshold quietly costs money — the checks a round number skips.</p>
+        <div class="panel" id="warnings"></div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          Order data is the fictional <strong>Northstar Outfitters</strong> store from
+          this playbook's <code>shared-data/customers/orders.csv</code>. Nudge rate and
+          conversion lift are explicit assumptions, not measured — the tool shows how
+          sensitive the answer is to them. Synthetic data only; no real emails or
+          personal data. Client-side, no backend. Part of the
+          <a href="https://github.com/aaronwest-repo/growth-engineering-playbook" target="_blank" rel="noopener">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

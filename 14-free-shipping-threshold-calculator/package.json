@@ -1,0 +1,13 @@
+{
+  "name": "free-shipping-threshold-calculator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A margin-aware free-shipping threshold calculator: models subsidy, basket nudging, and conversion lift from the store's own basket distribution, with break-even and wrong-vs-right analysis.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/threshold.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -262,3 +262,19 @@ jobs:
       - name: Run recommendation rules engine smoke test
         working-directory: 13-recommendation-rules-engine
         run: node tests/rec.test.mjs
+
+  free-shipping-threshold-calculator:
+    name: 14-free-shipping-threshold-calculator smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run free-shipping threshold smoke test
+        working-directory: 14-free-shipping-threshold-calculator
+        run: node tests/threshold.test.mjs
