@@ -1,0 +1,13 @@
+{
+  "name": "schema-markup-generator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generate clean JSON-LD structured data (Product, Article, FAQPage, BreadcrumbList, Organization) from real catalog data and lint it against required/recommended fields and rich-result rules.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/schema.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
