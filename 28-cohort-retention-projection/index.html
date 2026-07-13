@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cohort Retention & LTV Projection - Growth Engineering Playbook</title>
+    <meta
+      name="description"
+      content="Fit a retention curve to the cohort triangle and project forward: realised vs projected LTV, a retention heatmap, cumulative-value curves, and the early-retention trend that leads cohort quality — the forward-looking complement to realised LTV."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Crect x='2.5' y='3' width='11' height='2.4' rx='.5' fill='%232fbf87'/%3E%3Crect x='2.5' y='6.8' width='8' height='2.4' rx='.5' fill='%234f9cf9'/%3E%3Crect x='2.5' y='10.6' width='5' height='2.4' rx='.5' fill='%23e0a83a'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1720; --panel: #161f2b; --panel-2: #1c2836; --border: #2a3949;
+        --text: #e7edf3; --muted: #93a4b7; --accent: #4f9cf9;
+        --good: #2fbf87; --warn: #e0a83a; --bad: #ec6a5e;
+        --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #1a2a3d, transparent), var(--bg); background-color: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 1120px; margin: 0 auto; padding: 48px 20px 64px; }
+      .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 600; }
+      h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.02em; }
+      .lede { color: var(--muted); max-width: 76ch; margin: 0; font-size: 16px; }
+      h2 { font-size: 18px; margin: 30px 0 4px; }
+      .section-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 12px; }
+      .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 15px 17px; }
+
+      .metrics { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 22px 0 4px; }
+      @media (max-width: 900px) { .metrics { grid-template-columns: repeat(4, 1fr); } }
+      @media (max-width: 520px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+      .metric { background: var(--panel); padding: 11px 12px; }
+      .metric dt { font-size: 10.5px; color: var(--muted); margin: 0 0 4px; }
+      .metric dd { margin: 0; font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .metric.good dd { color: var(--good); } .metric.warn dd { color: var(--warn); } .metric.bad dd { color: var(--bad); } .metric.accent dd { color: var(--accent); }
+      .metric dd.sm { font-size: 14px; }
+
+      .controls { display: flex; flex-wrap: wrap; gap: 16px 22px; align-items: flex-end; margin: 22px 0 6px; }
+      .ctrl label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+      .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-wrap: wrap; }
+      .seg button { background: transparent; color: var(--muted); border: none; padding: 7px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+      .seg button[aria-pressed="true"] { background: var(--accent); color: #05192f; }
+
+      .grid2 { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; align-items: start; }
+      @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+
+      /* Retention triangle heatmap */
+      .tri { overflow-x: auto; }
+      .tri-grid { display: grid; gap: 2px; font-size: 10px; min-width: 380px; }
+      .tri-cell { height: 20px; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: #05192f; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .tri-cell.future { background: var(--panel-2); border: 1px dashed var(--border); }
+      .tri-cell.head { background: transparent; color: var(--muted); font-weight: 600; height: 16px; }
+      .tri-lab { color: var(--muted); font-weight: 600; display: flex; align-items: center; padding-right: 6px; white-space: nowrap; }
+      .tri-legend { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); margin-top: 10px; }
+      .tri-scale { height: 10px; width: 120px; border-radius: 3px; background: linear-gradient(90deg, #24303e, var(--good)); }
+
+      /* Projected LTV bars */
+      .bar-row { display: grid; grid-template-columns: 70px 1fr 132px; gap: 10px; align-items: center; padding: 5px 0; font-size: 12.5px; }
+      .bar-lab { color: var(--muted); font-weight: 600; }
+      .bar-track { position: relative; height: 18px; background: var(--panel-2); border-radius: 4px; overflow: hidden; display: flex; }
+      .bar-real { background: var(--good); height: 100%; }
+      .bar-proj { background: rgba(79,156,249,.5); height: 100%; }
+      .bar-val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+      .bar-val .sub { color: var(--muted); font-weight: 400; font-size: 11px; }
+      .legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: var(--muted); margin-top: 12px; }
+      .swatch { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; }
+      .swatch.real { background: var(--good); } .swatch.proj { background: rgba(79,156,249,.5); }
+
+      .callout { margin-top: 12px; padding: 11px 13px; border-radius: 9px; font-size: 13px; }
+      .callout.warn { background: rgba(224,168,58,.1); border: 1px solid rgba(224,168,58,.3); }
+      .callout.good { background: rgba(47,191,135,.1); border: 1px solid rgba(47,191,135,.3); }
+      .callout b { color: var(--text); }
+
+      .tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+      .tbl th, .tbl td { padding: 7px 8px; border-bottom: 1px solid var(--border); text-align: right; font-variant-numeric: tabular-nums; }
+      .tbl th:first-child, .tbl td:first-child { text-align: left; }
+      .tbl th { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; }
+      .tbl th.sorted { color: var(--accent); }
+      .tbl tbody tr:hover { background: var(--panel-2); }
+
+      .insight { font-size: 13.5px; } .insight b { color: var(--text); }
+      .footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+      .footer a { color: var(--accent); }
+      code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: .9em; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Growth Engineering Playbook · Wave 5</p>
+        <h1>Realised LTV always lies about your newest customers.</h1>
+        <p class="lede">
+          Lifetime value counted from banked orders (case 24) is honest but
+          backward-looking — a cohort acquired last month has barely started paying,
+          so its realised LTV looks terrible even if it's your best. This fits a
+          retention curve to the cohort <strong>triangle</strong>, projects each
+          cohort forward, and reports <strong>projected LTV</strong> next to realised
+          so you can see how much is banked and how much is forecast. And it watches
+          the one number that leads everything — <strong>early retention across
+          cohorts</strong> — because that's where declining acquisition quality shows
+          up long before LTV can confirm it. Deterministic, client-side.
+        </p>
+        <p class="section-sub" id="fileInfo" style="margin-top:12px">Fitting retention curve…</p>
+      </header>
+
+      <dl class="metrics" id="metrics"></dl>
+
+      <div class="controls">
+        <div class="ctrl">
+          <label>Projection horizon</label>
+          <div class="seg" data-control="horizon">
+            <button type="button" data-value="12">12 mo</button>
+            <button type="button" data-value="24" aria-pressed="true">24 mo</button>
+            <button type="button" data-value="36">36 mo</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>LTV basis</label>
+          <div class="seg" data-control="basis">
+            <button type="button" data-value="contribution" aria-pressed="true">Contribution</button>
+            <button type="button" data-value="revenue">Revenue</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Sort cohorts by</label>
+          <div class="seg" data-control="sort">
+            <button type="button" data-value="age" aria-pressed="true">Cohort age</button>
+            <button type="button" data-value="projected">Projected LTV</button>
+            <button type="button" data-value="retention">Retention</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <section>
+          <h2>Retention triangle</h2>
+          <p class="section-sub">Active-customer share by cohort (rows) and months since acquisition (columns). Dashed cells are the future the projection fills.</p>
+          <div class="panel"><div class="tri"><div class="tri-grid" id="triangle"></div></div>
+            <div class="tri-legend">0%<span class="tri-scale"></span>100% active</div>
+          </div>
+        </section>
+        <section>
+          <h2>Retention curve</h2>
+          <p class="section-sub">Pooled observed retention (dots) and the fitted power-law curve extended into the projected tail.</p>
+          <div class="panel"><svg id="curve" viewBox="0 0 400 200" width="100%" preserveAspectRatio="xMidYMid meet"></svg><div id="curveNote" class="section-sub" style="margin:8px 2px 0"></div></div>
+        </section>
+      </div>
+
+      <section>
+        <h2 id="ltvTitle">Realised vs projected LTV by cohort</h2>
+        <p class="section-sub">Green = value already banked; blue = value the projection expects still to come.</p>
+        <div class="panel"><div id="ltvbars"></div>
+          <div class="legend"><span><span class="swatch real"></span>Realised (banked)</span><span><span class="swatch proj"></span>Projected (still to come)</span></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Cohort detail</h2>
+        <p class="section-sub">Early retention (M1, M3) is the leading quality signal; realised vs projected shows how much of each cohort's value is still a forecast.</p>
+        <div class="panel" style="overflow-x:auto"><table class="tbl" id="table"></table></div>
+      </section>
+
+      <section>
+        <h2>The Decision</h2>
+        <div class="panel insight" id="insight"></div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          Cohort data is the fictional <strong>Northstar Outfitters</strong> triangle in
+          <code>cohorts.js</code>, generated from a known power-law retention process so the fit can be graded —
+          no real customers or PII. Retention is fit as r(age)=A·age<sup>−b</sup> by least squares on log-log; projected LTV
+          sums retention × revenue-per-active × margin to the chosen horizon. Realised is banked; projected is a forecast —
+          validate it as cohorts mature. Part of the
+          <a href="https://github.com/aaronwest-repo/growth-engineering-playbook" target="_blank" rel="noopener">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

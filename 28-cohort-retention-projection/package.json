@@ -1,0 +1,13 @@
+{
+  "name": "cohort-retention-projection",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Fit a retention curve to the cohort triangle and project forward: realised vs projected LTV, a retention heatmap, cumulative-value curves, and the early-retention trend that leads cohort quality — the forward-looking complement to realised LTV.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/retention.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

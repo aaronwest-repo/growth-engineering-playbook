@@ -486,3 +486,19 @@ jobs:
       - name: Run revenue demand forecast smoke test
         working-directory: 27-revenue-demand-forecast
         run: node tests/forecast.test.mjs
+
+  cohort-retention-projection:
+    name: 28-cohort-retention-projection smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run cohort retention projection smoke test
+        working-directory: 28-cohort-retention-projection
+        run: node tests/retention.test.mjs

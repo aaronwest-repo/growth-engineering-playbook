@@ -18,7 +18,7 @@ Role signal: senior e-commerce / marketing technology work, focused on turning m
 
 ## Use Cases
 
-Waves 1–4 are complete — experimentation & tracking, customer data & lifecycle growth, content & SEO for the AI era, and trustworthy measurement & attribution. Wave 5 is underway with growth planning and unit economics. Every tool ships with source code, a screenshot, a smoke test, and a GitHub Pages demo.
+All five waves are complete — experimentation & tracking, customer data & lifecycle growth, content & SEO for the AI era, trustworthy measurement & attribution, and growth planning & unit economics. Every tool ships with source code, a screenshot, a smoke test, and a GitHub Pages demo.
 
 | # | Demo | Status | What it demonstrates |
 |---|------|--------|----------------------|
@@ -49,6 +49,7 @@ Waves 1–4 are complete — experimentation & tracking, customer data & lifecyc
 | 25 | [`marketing-budget-allocator`](25-marketing-budget-allocator) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/25-marketing-budget-allocator/) | Budget optimisation under diminishing returns: water-fill spend to equal marginal ROAS, current-vs-optimal uplift, the profit-maximising budget, and profit-vs-revenue objectives |
 | 26 | [`mmm-lite`](26-mmm-lite) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/26-mmm-lite/) | Marketing mix model: adstock (carryover) + saturation transforms, grid-searched carryover, an OLS sales decomposition into base vs channels, per-channel ROI and response curves — with fit R² and the correlational caveat |
 | 27 | [`revenue-demand-forecast`](27-revenue-demand-forecast) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/27-revenue-demand-forecast/) | Revenue forecast with honest uncertainty: log-linear trend + monthly seasonality, prediction intervals that widen with the horizon, and a backtest (MAPE + interval coverage) that shows whether to trust it |
+| 28 | [`cohort-retention-projection`](28-cohort-retention-projection) | Demo-ready | Projected (not just realised) LTV: fit a power-law retention curve to the cohort triangle, project each cohort's tail, and track the early-retention trend that leads cohort quality |
 
 ## Run Philosophy
 
