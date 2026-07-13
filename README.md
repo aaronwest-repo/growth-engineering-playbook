@@ -36,7 +36,7 @@ Wave 1 (experimentation, tracking, AI, automation, infrastructure) and Wave 2 (c
 | 12 | [`customer-support-insight-miner`](12-customer-support-insight-miner) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/12-customer-support-insight-miner/) | Support tickets as customer intelligence: theme clusters, category friction, content gaps, support-risk customers, automation candidates, and an action queue |
 | 13 | [`recommendation-rules-engine`](13-recommendation-rules-engine) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/13-recommendation-rules-engine/) | Governed product recommendations: blended strategies, business guardrails (in-stock, margin floor, return-risk suppression, diversity), and per-slot explainability |
 | 14 | [`free-shipping-threshold-calculator`](14-free-shipping-threshold-calculator) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/14-free-shipping-threshold-calculator/) | Margin-aware free-shipping threshold: models subsidy, basket nudging, and conversion lift; break-even analysis and revenue-vs-contribution truth-telling |
-| 15 | [`geo-content-checker`](15-geo-content-checker) | Demo-ready | Answer-engine (AEO) content audit: answer-first structure, extractable definitions, quotable sentences, schema hints, and the sentences an AI would quote |
+| 15 | [`geo-content-checker`](15-geo-content-checker) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/15-geo-content-checker/) | Answer-engine (AEO) content audit: answer-first structure, extractable definitions, quotable sentences, schema hints, and the sentences an AI would quote |
 
 ## Run Philosophy
 
