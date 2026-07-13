@@ -1,0 +1,13 @@
+{
+  "name": "geo-content-checker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A GEO/AEO content checker: audits an article the way an AI answer engine reads it — answer-first structure, definitions, question headings, quotable sentences, specificity, and schema hints — deterministically, with the exact sentences a model would quote.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/geo.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

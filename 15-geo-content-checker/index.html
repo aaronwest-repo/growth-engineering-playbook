@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GEO / AEO Content Checker - Growth Engineering Playbook</title>
+    <meta
+      name="description"
+      content="Audit an article the way an AI answer engine reads it: answer-first structure, extractable definitions, question-shaped headings, quotable sentences, specificity, and schema hints — with the exact sentences a model would quote and prioritised fixes. Deterministic, no LLM."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Cpath d='M3 4h10M3 7h7M3 10h9' stroke='%234f9cf9' stroke-width='1.3' stroke-linecap='round'/%3E%3Cpath d='M10.5 11.5l1.6 1.6 2.4-3' fill='none' stroke='%232fbf87' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1720; --panel: #161f2b; --panel-2: #1c2836; --border: #2a3949;
+        --text: #e7edf3; --muted: #93a4b7; --accent: #4f9cf9;
+        --good: #2fbf87; --warn: #e0a83a; --bad: #ec6a5e;
+        --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #1a2a3d, transparent), var(--bg); background-color: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 1120px; margin: 0 auto; padding: 48px 20px 64px; }
+      .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 600; }
+      h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.02em; }
+      .lede { color: var(--muted); max-width: 76ch; margin: 0; font-size: 16px; }
+      h2 { font-size: 18px; margin: 30px 0 4px; }
+      .section-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 12px; }
+      .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 15px 17px; }
+
+      .metrics { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 22px 0 4px; }
+      @media (max-width: 900px) { .metrics { grid-template-columns: repeat(4, 1fr); } }
+      @media (max-width: 520px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+      .metric { background: var(--panel); padding: 11px 12px; }
+      .metric dt { font-size: 10.5px; color: var(--muted); margin: 0 0 4px; }
+      .metric dd { margin: 0; font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .metric.good dd { color: var(--good); } .metric.warn dd { color: var(--warn); } .metric.bad dd { color: var(--bad); }
+      .metric .grade { font-size: 13px; font-weight: 800; }
+
+      .source { display: grid; gap: 12px; margin: 20px 0 4px; }
+      .source .row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+      .source label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+      select, input[type=text], textarea { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 9px 11px; font-size: 14px; font-family: inherit; }
+      select { min-width: 280px; } input[type=text] { min-width: 320px; flex: 1; }
+      textarea { width: 100%; min-height: 150px; line-height: 1.5; resize: vertical; }
+
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+      @media (max-width: 880px) { .grid2 { grid-template-columns: 1fr; } }
+
+      /* Score breakdown */
+      .dim { margin-bottom: 12px; }
+      .dim .top { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+      .dim .bar { height: 8px; border-radius: 4px; background: var(--panel-2); overflow: hidden; }
+      .dim .bar > span { display: block; height: 100%; }
+      .dim .s { font-variant-numeric: tabular-nums; font-weight: 700; }
+      .dim .find { font-size: 12px; color: var(--muted); margin: 4px 0 0; }
+      .g70 { color: var(--good); } .g50 { color: var(--warn); } .g0 { color: var(--bad); }
+      .bg70 { background: var(--good); } .bg50 { background: var(--warn); } .bg0 { background: var(--bad); }
+
+      /* Quotable snippets */
+      .snip { border-left: 3px solid var(--accent); background: var(--panel-2); border-radius: 0 8px 8px 0; padding: 9px 12px; margin-bottom: 8px; font-size: 13.5px; }
+      .snip .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); display: block; margin-top: 5px; }
+      .snip.definition { border-left-color: var(--good); } .snip.concrete { border-left-color: var(--warn); }
+
+      /* Recommendations */
+      .rec-list { list-style: none; padding: 0; margin: 0; }
+      .rec-list li { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+      .rec-list li:last-child { border-bottom: none; }
+      .imp { flex: none; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: rgba(224,168,58,.14); color: var(--warn); font-variant-numeric: tabular-nums; }
+      .rec-dim { color: var(--muted); font-size: 11.5px; }
+
+      /* Schema */
+      .schema-list { list-style: none; padding: 0; margin: 0 0 10px; }
+      .schema-list li { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+      .schema-list li:last-child { border-bottom: none; }
+      .schema-list .t { font-weight: 700; color: var(--accent); }
+      pre { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 11px; overflow-x: auto; font-size: 11.5px; color: #cdd7e2; margin: 0; }
+
+      /* Coverage */
+      .cov .verdict { font-weight: 600; margin: 0 0 6px; }
+      .cov .verdict.good { color: var(--good); } .cov .verdict.warn { color: var(--warn); } .cov .verdict.bad { color: var(--bad); }
+      .cov .ans { background: var(--panel-2); border-radius: 8px; padding: 9px 12px; font-size: 13.5px; }
+
+      /* Outline */
+      .outline { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+      .outline li { padding: 6px 0; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: baseline; }
+      .outline li:last-child { border-bottom: none; }
+      .outline .lvl3 { padding-left: 18px; }
+      .flag { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 999px; }
+      .flag.q { color: var(--good); background: rgba(47,191,135,.14); } .flag.noq { color: var(--muted); background: rgba(255,255,255,.05); }
+
+      .footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+      .footer a { color: var(--accent); }
+      code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: .9em; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Growth Engineering Playbook · Wave 3</p>
+        <h1>Would an AI answer engine quote this page?</h1>
+        <p class="lede">
+          Search is moving from ten blue links to answer engines — AI Overviews,
+          ChatGPT, Perplexity — that extract and quote content instead of just
+          linking it. This audits an article the way those engines read it:
+          answer-first structure, self-contained definitions, question-shaped
+          headings, quotable sentences, concrete specifics, and the structured data
+          that maps questions to answers. It scores each dimension, shows the exact
+          sentences a model would lift, recommends the schema to add, and gives
+          prioritised fixes. Deterministic rules, not an LLM — so every score is
+          inspectable. Paste your own article, or run it on the meta example.
+        </p>
+      </header>
+
+      <dl class="metrics" id="metrics"></dl>
+
+      <div class="source">
+        <div class="row">
+          <div>
+            <label for="sampleSelect">Sample article</label>
+            <select id="sampleSelect" aria-label="Choose a sample article"></select>
+          </div>
+          <div style="flex:1">
+            <label for="question">Target question (optional) — the query you want this page to answer</label>
+            <input type="text" id="question" placeholder="e.g. What is answer engine optimization?" />
+          </div>
+        </div>
+        <div>
+          <label for="content">Article (edit freely, or paste your own)</label>
+          <textarea id="content" spellcheck="false" aria-label="Article content to audit"></textarea>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <section>
+          <h2>Score Breakdown</h2>
+          <p class="section-sub">Six dimensions of answer-engine readiness, each with the finding behind the score.</p>
+          <div class="panel" id="breakdown"></div>
+        </section>
+        <section>
+          <h2>What an Answer Engine Would Quote</h2>
+          <p class="section-sub">The most liftable sentences — self-contained, definitional, or concrete.</p>
+          <div class="panel" id="snippets"></div>
+        </section>
+      </div>
+
+      <div class="grid2">
+        <section>
+          <h2>Prioritised Fixes</h2>
+          <p class="section-sub">Ranked by impact on the overall score — the highest-leverage edits first.</p>
+          <div class="panel" id="recs"></div>
+        </section>
+        <section>
+          <h2>Structured Data to Add</h2>
+          <p class="section-sub">The schema an answer engine uses to map questions to answers — with a ready snippet.</p>
+          <div class="panel" id="schema"></div>
+        </section>
+      </div>
+
+      <div class="grid2">
+        <section>
+          <h2>Answer Coverage</h2>
+          <p class="section-sub">Does the page answer your target question — early, and quotably?</p>
+          <div class="panel cov" id="coverage"></div>
+        </section>
+        <section>
+          <h2>Outline</h2>
+          <p class="section-sub">Heading structure, flagged for question-shaping and answer presence.</p>
+          <div class="panel" id="outline"></div>
+        </section>
+      </div>
+
+      <footer class="footer">
+        <p>
+          Sample articles are invented demo content. The audit is deterministic
+          keyword/structure analysis — no LLM, no network, no personal data — so
+          every score can be traced to a rule. Client-side only. Part of the
+          <a href="https://github.com/aaronwest-repo/growth-engineering-playbook" target="_blank" rel="noopener">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
