@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Revenue Demand Forecast - Growth Engineering Playbook</title>
+    <meta
+      name="description"
+      content="A revenue forecast with honest uncertainty: log-linear trend + monthly seasonality by OLS, prediction intervals that widen with the horizon, and a backtest (MAPE + interval coverage) so the bands are calibrated, not decorative."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Cpath d='M2 11 L6 8 L9 9 L14 3' fill='none' stroke='%234f9cf9' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M9 9 L14 3' stroke='%232fbf87' stroke-width='1.6' stroke-dasharray='2 2'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1720; --panel: #161f2b; --panel-2: #1c2836; --border: #2a3949;
+        --text: #e7edf3; --muted: #93a4b7; --accent: #4f9cf9;
+        --good: #2fbf87; --warn: #e0a83a; --bad: #ec6a5e;
+        --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #1a2a3d, transparent), var(--bg); background-color: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 1120px; margin: 0 auto; padding: 48px 20px 64px; }
+      .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 600; }
+      h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.02em; }
+      .lede { color: var(--muted); max-width: 76ch; margin: 0; font-size: 16px; }
+      h2 { font-size: 18px; margin: 30px 0 4px; }
+      .section-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 12px; }
+      .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 15px 17px; }
+
+      .metrics { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 22px 0 4px; }
+      @media (max-width: 900px) { .metrics { grid-template-columns: repeat(4, 1fr); } }
+      @media (max-width: 520px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+      .metric { background: var(--panel); padding: 11px 12px; }
+      .metric dt { font-size: 10.5px; color: var(--muted); margin: 0 0 4px; }
+      .metric dd { margin: 0; font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .metric.good dd { color: var(--good); } .metric.warn dd { color: var(--warn); } .metric.bad dd { color: var(--bad); } .metric.accent dd { color: var(--accent); }
+      .metric dd.sm { font-size: 14px; }
+
+      .controls { display: flex; flex-wrap: wrap; gap: 16px 22px; align-items: flex-end; margin: 22px 0 6px; }
+      .ctrl label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+      .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-wrap: wrap; }
+      .seg button { background: transparent; color: var(--muted); border: none; padding: 7px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+      .seg button[aria-pressed="true"] { background: var(--accent); color: #05192f; }
+
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+      @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+
+      .fc-legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+      .fc-legend .dot { display: inline-block; width: 16px; height: 3px; border-radius: 2px; vertical-align: 3px; margin-right: 5px; }
+      .fc-legend .box { display: inline-block; width: 12px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 5px; background: rgba(79,156,249,.22); border: 1px solid rgba(79,156,249,.5); }
+
+      /* Seasonality bars */
+      .sea-row { display: grid; grid-template-columns: 40px 1fr 52px; gap: 8px; align-items: center; padding: 3px 0; font-size: 12px; }
+      .sea-lab { color: var(--muted); }
+      .sea-track { position: relative; height: 14px; background: var(--panel-2); border-radius: 3px; }
+      .sea-mid { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--border); }
+      .sea-fill { position: absolute; top: 1px; bottom: 1px; border-radius: 2px; }
+      .sea-fill.up { left: 50%; background: var(--good); } .sea-fill.down { right: 50%; background: var(--warn); }
+      .sea-val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+      .kv { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-size: 13px; margin-top: 10px; }
+      .kv dt { color: var(--muted); } .kv dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+      .callout { margin-top: 12px; padding: 11px 13px; border-radius: 9px; font-size: 13px; }
+      .callout.good { background: rgba(47,191,135,.1); border: 1px solid rgba(47,191,135,.3); }
+      .callout.warn { background: rgba(224,168,58,.1); border: 1px solid rgba(224,168,58,.3); }
+      .callout b { color: var(--text); }
+
+      .tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+      .tbl th, .tbl td { padding: 7px 8px; border-bottom: 1px solid var(--border); text-align: right; font-variant-numeric: tabular-nums; }
+      .tbl th:first-child, .tbl td:first-child { text-align: left; }
+      .tbl th { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; }
+      .tbl tbody tr:hover { background: var(--panel-2); }
+
+      .insight { font-size: 13.5px; } .insight b { color: var(--text); }
+      .footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+      .footer a { color: var(--accent); }
+      code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: .9em; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Growth Engineering Playbook · Wave 5</p>
+        <h1>A forecast without a range is just a guess in a suit.</h1>
+        <p class="lede">
+          Planning runs on a single revenue number for next quarter — but the number
+          that matters is the <strong>range</strong>, and how fast it widens as you
+          look further out. This fits a trend and monthly seasonality to three years
+          of Northstar Outfitters revenue, projects it forward with
+          <strong>prediction intervals that grow with the horizon</strong>, and —
+          the part dashboards skip — <strong>backtests</strong> on held-out months so
+          you can see the error (MAPE) and whether the intervals actually contain
+          reality (coverage). Deterministic, client-side.
+        </p>
+        <p class="section-sub" id="fileInfo" style="margin-top:12px">Fitting forecast…</p>
+      </header>
+
+      <dl class="metrics" id="metrics"></dl>
+
+      <div class="controls">
+        <div class="ctrl">
+          <label>Forecast horizon</label>
+          <div class="seg" data-control="horizon">
+            <button type="button" data-value="3">3 mo</button>
+            <button type="button" data-value="6">6 mo</button>
+            <button type="button" data-value="12" aria-pressed="true">12 mo</button>
+            <button type="button" data-value="18">18 mo</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Seasonality</label>
+          <div class="seg" data-control="seasonality">
+            <button type="button" data-value="on" aria-pressed="true">On</button>
+            <button type="button" data-value="off">Off</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Prediction interval</label>
+          <div class="seg" data-control="interval">
+            <button type="button" data-value="80" aria-pressed="true">80%</button>
+            <button type="button" data-value="95">95%</button>
+          </div>
+        </div>
+      </div>
+
+      <section>
+        <h2 id="chartTitle">Revenue: history &amp; forecast</h2>
+        <p class="section-sub">Solid = actual. Blue = forecast, with the shaded prediction interval widening as the horizon extends.</p>
+        <div class="panel">
+          <svg id="chart" viewBox="0 0 1080 300" width="100%" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="fc-legend">
+            <span><span class="dot" style="background:var(--muted)"></span>Actual</span>
+            <span><span class="dot" style="background:var(--accent)"></span>Forecast</span>
+            <span><span class="box"></span>Prediction interval</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="grid2">
+        <section>
+          <h2>Seasonal profile</h2>
+          <p class="section-sub">Each month's revenue vs the annual average — the shape the model projects forward.</p>
+          <div class="panel"><div id="seasonal"></div></div>
+        </section>
+        <section>
+          <h2>Backtest — is the forecast trustworthy?</h2>
+          <p class="section-sub">Trained on all but the last 12 months, then scored on the months it never saw.</p>
+          <div class="panel"><svg id="backtest" viewBox="0 0 500 170" width="100%" preserveAspectRatio="xMidYMid meet"></svg><dl class="kv" id="btKv"></dl><div id="btCallout"></div></div>
+        </section>
+      </div>
+
+      <section>
+        <h2 id="tableTitle">Monthly forecast</h2>
+        <p class="section-sub">Point forecast with the low/high bounds of the prediction interval.</p>
+        <div class="panel" style="overflow-x:auto"><table class="tbl" id="table"></table></div>
+      </section>
+
+      <section>
+        <h2>The Decision</h2>
+        <div class="panel insight" id="insight"></div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          Monthly revenue is the fictional <strong>Northstar Outfitters</strong> series in
+          <code>series.js</code>, generated from a known trend × seasonality process so the forecaster can be graded
+          against truth — no real data or PII. The model fits log-revenue with a linear trend + monthly seasonal
+          effects by least squares; intervals use the residual spread, widened with the horizon. A forecast is a
+          statement about uncertainty — validate it by backtesting. Part of the
+          <a href="https://github.com/aaronwest-repo/growth-engineering-playbook" target="_blank" rel="noopener">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

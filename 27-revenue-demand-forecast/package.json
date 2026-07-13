@@ -1,0 +1,13 @@
+{
+  "name": "revenue-demand-forecast",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A revenue forecast with honest uncertainty: log-linear trend + monthly seasonality by OLS, prediction intervals that widen with the horizon, and a backtest (MAPE + interval coverage) so the bands are calibrated, not decorative.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/forecast.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
