@@ -1,0 +1,13 @@
+{
+  "name": "consent-mode-impact-simulator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Simulate analytics under-reporting from consent declines, ITP cookie loss, and ad-blockers by channel, with consent-mode modelling recovery and a loss-by-cause breakdown.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/consent.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

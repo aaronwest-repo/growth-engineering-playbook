@@ -358,3 +358,19 @@ jobs:
       - name: Run attribution model comparator smoke test
         working-directory: 19-attribution-model-comparator
         run: node tests/attribution.test.mjs
+
+  consent-mode-impact-simulator:
+    name: 20-consent-mode-impact-simulator smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run consent-mode impact simulator smoke test
+        working-directory: 20-consent-mode-impact-simulator
+        run: node tests/consent.test.mjs
