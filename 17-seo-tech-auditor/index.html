@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Technical SEO Auditor - Growth Engineering Playbook</title>
+    <meta
+      name="description"
+      content="Crawl-report technical-SEO audit of a sample site: broken links, redirect chains, missing/duplicate titles and meta, canonical issues, noindex on key pages, orphan pages, thin content, and missing structured data — scored and prioritised by severity."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Ccircle cx='7' cy='7' r='3.4' fill='none' stroke='%234f9cf9' stroke-width='1.4'/%3E%3Cpath d='M9.6 9.6L13 13' stroke='%234f9cf9' stroke-width='1.4' stroke-linecap='round'/%3E%3Cpath d='M5.4 7l1.1 1.1L8.9 5.7' fill='none' stroke='%232fbf87' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1720; --panel: #161f2b; --panel-2: #1c2836; --border: #2a3949;
+        --text: #e7edf3; --muted: #93a4b7; --accent: #4f9cf9;
+        --good: #2fbf87; --warn: #e0a83a; --bad: #ec6a5e;
+        --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #1a2a3d, transparent), var(--bg); background-color: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 1120px; margin: 0 auto; padding: 48px 20px 64px; }
+      .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 600; }
+      h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.02em; }
+      .lede { color: var(--muted); max-width: 76ch; margin: 0; font-size: 16px; }
+      h2 { font-size: 18px; margin: 30px 0 4px; }
+      .section-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 12px; }
+      .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 15px 17px; }
+
+      .metrics { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 22px 0 4px; }
+      @media (max-width: 900px) { .metrics { grid-template-columns: repeat(4, 1fr); } }
+      @media (max-width: 520px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+      .metric { background: var(--panel); padding: 11px 12px; }
+      .metric dt { font-size: 10.5px; color: var(--muted); margin: 0 0 4px; }
+      .metric dd { margin: 0; font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .metric.good dd { color: var(--good); } .metric.warn dd { color: var(--warn); } .metric.bad dd { color: var(--bad); }
+
+      .controls { display: flex; flex-wrap: wrap; gap: 14px 20px; align-items: flex-end; margin: 22px 0 6px; }
+      .ctrl label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+      .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+      .seg button { background: transparent; color: var(--muted); border: none; padding: 7px 13px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+      .seg button[aria-pressed="true"] { background: var(--accent); color: #05192f; }
+      .filter-note { font-size: 12.5px; color: var(--muted); align-self: center; }
+      .filter-note a { color: var(--accent); cursor: pointer; }
+
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+      @media (max-width: 880px) { .grid2 { grid-template-columns: 1fr; } }
+
+      /* Issue categories */
+      .cat-list { list-style: none; padding: 0; margin: 0; }
+      .cat-list li { display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: center; padding: 8px 6px; border-bottom: 1px solid var(--border); font-size: 13.5px; cursor: pointer; border-radius: 6px; }
+      .cat-list li:last-child { border-bottom: none; }
+      .cat-list li:hover { background: var(--panel-2); }
+      .cat-list li[aria-selected="true"] { background: rgba(79,156,249,.1); }
+      .dot { width: 10px; height: 10px; border-radius: 50%; }
+      .dot.error { background: var(--bad); } .dot.warning { background: var(--warn); } .dot.notice { background: var(--accent); }
+      .cat-count { font-variant-numeric: tabular-nums; font-weight: 700; }
+
+      /* Fixes */
+      .fix-list { list-style: none; padding: 0; margin: 0; }
+      .fix-list li { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+      .fix-list li:last-child { border-bottom: none; }
+      .imp { flex: none; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+      .imp.error { color: var(--bad); background: rgba(236,106,94,.14); } .imp.warning { color: var(--warn); background: rgba(224,168,58,.14); } .imp.notice { color: var(--accent); background: rgba(79,156,249,.14); }
+
+      /* Crawl table */
+      .tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+      .tbl th, .tbl td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+      .tbl th { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; }
+      .tbl td.n, .tbl th.n { text-align: right; font-variant-numeric: tabular-nums; }
+      .tbl tbody tr { cursor: pointer; }
+      .tbl tbody tr:hover { background: var(--panel-2); }
+      .tbl tbody tr[aria-selected="true"] { background: rgba(79,156,249,.1); }
+      .url { font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+      .st { font-weight: 700; font-variant-numeric: tabular-nums; }
+      .st.ok { color: var(--good); } .st.redir { color: var(--warn); } .st.err { color: var(--bad); }
+      .pill { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 999px; }
+      .pill.y { color: var(--good); background: rgba(47,191,135,.14); } .pill.n { color: var(--muted); background: rgba(255,255,255,.05); }
+      .iss { font-weight: 700; font-variant-numeric: tabular-nums; }
+      .iss.has { color: var(--bad); }
+
+      /* Page detail */
+      .pd-meta { display: grid; grid-template-columns: 96px 1fr; gap: 5px 12px; font-size: 13px; margin: 0 0 12px; }
+      .pd-meta dt { color: var(--muted); font-size: 11.5px; }
+      .pd-meta dd { margin: 0; word-break: break-word; }
+      .pd-issues { list-style: none; padding: 0; margin: 0; }
+      .pd-issues li { padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+      .pd-issues li:last-child { border-bottom: none; }
+      .sev { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 7px; border-radius: 999px; margin-right: 8px; }
+      .sev.error { color: var(--bad); background: rgba(236,106,94,.14); } .sev.warning { color: var(--warn); background: rgba(224,168,58,.14); } .sev.notice { color: var(--accent); background: rgba(79,156,249,.14); }
+      .fix { color: var(--muted); font-size: 12.5px; margin: 3px 0 0; }
+
+      .footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+      .footer a { color: var(--accent); }
+      code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: .9em; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Growth Engineering Playbook · Wave 3</p>
+        <h1>The crawl before the content</h1>
+        <p class="lede">
+          Great content and clean schema don't rank if crawlers can't reach or
+          index the page. This audits a sample crawl of the fictional Northstar
+          Outfitters site the way a crawler's report would — broken internal links,
+          redirect chains, missing and duplicate titles, canonical mistakes, a
+          noindex on a money page, orphan pages, thin content, and missing
+          structured data. It scores site health and prioritises by severity,
+          because the expert move isn't listing every nit — it's fixing what
+          actually blocks ranking first. Deterministic, client-side; the crawl is a
+          bundled fixture.
+        </p>
+      </header>
+
+      <dl class="metrics" id="metrics"></dl>
+
+      <div class="controls">
+        <div class="ctrl">
+          <label>Severity</label>
+          <div class="seg" data-control="severity">
+            <button type="button" data-value="all" aria-pressed="true">All</button>
+            <button type="button" data-value="error">Errors</button>
+            <button type="button" data-value="warning">Warnings</button>
+          </div>
+        </div>
+        <div class="filter-note" id="filterNote"></div>
+      </div>
+
+      <div class="grid2">
+        <section>
+          <h2>Issues by Category</h2>
+          <p class="section-sub">Worst first (severity × count). Click a category to filter the crawl below.</p>
+          <div class="panel"><ul class="cat-list" id="categories"></ul></div>
+        </section>
+        <section>
+          <h2>Prioritised Fixes</h2>
+          <p class="section-sub">The highest-impact issues to fix first — the crawl budget you're wasting.</p>
+          <div class="panel"><ul class="fix-list" id="fixes"></ul></div>
+        </section>
+      </div>
+
+      <section>
+        <h2 id="crawlTitle">Crawl</h2>
+        <p class="section-sub">Every URL, its status, indexability, inbound links, and issue count. Click a row for detail.</p>
+        <div class="panel" style="overflow-x:auto"><table class="tbl" id="crawl"></table></div>
+      </section>
+
+      <section>
+        <h2>Page Detail</h2>
+        <p class="section-sub">The selected URL's metadata and every issue found on it, with the fix.</p>
+        <div class="panel" id="detail"></div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          The crawl is a bundled sample of the fictional <strong>Northstar Outfitters</strong>
+          site with deliberately injected issues — invented URLs, no real domains or
+          personal data. The auditor is deterministic and approximates crawler
+          checks; validate a real site with a live crawl. Client-side only. Part of the
+          <a href="https://github.com/aaronwest-repo/growth-engineering-playbook" target="_blank" rel="noopener">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

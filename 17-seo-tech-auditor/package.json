@@ -1,0 +1,13 @@
+{
+  "name": "seo-tech-auditor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A technical-SEO auditor over a sample crawl: broken links, redirect chains, title/meta/canonical issues, noindex on key pages, orphan pages, thin content, and missing structured data — scored and prioritised by severity.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/seo.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

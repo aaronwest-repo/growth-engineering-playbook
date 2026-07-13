@@ -310,3 +310,19 @@ jobs:
       - name: Run schema markup generator smoke test
         working-directory: 16-schema-markup-generator
         run: node tests/schema.test.mjs
+
+  seo-tech-auditor:
+    name: 17-seo-tech-auditor smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run technical-SEO auditor smoke test
+        working-directory: 17-seo-tech-auditor
+        run: node tests/seo.test.mjs
