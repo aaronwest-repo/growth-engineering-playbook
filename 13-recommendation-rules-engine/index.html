@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recommendation Rules Engine - Northstar Outfitters</title>
+    <meta
+      name="description"
+      content="A governed product recommendation engine: legible strategies (complementary, bought-together, upsell, trending, brand) blended by objective, filtered by business guardrails (in-stock, margin floor, return-risk suppression, diversity), with per-recommendation explainability. Rules, not a black box."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230f1720'/%3E%3Crect x='2.5' y='3' width='4.2' height='4.2' rx='1' fill='%234f9cf9'/%3E%3Crect x='9.3' y='3' width='4.2' height='4.2' rx='1' fill='%232fbf87'/%3E%3Crect x='2.5' y='9.3' width='4.2' height='4.2' rx='1' fill='%23e0a83a'/%3E%3Cpath d='M11.4 9.3v4.2M9.3 11.4h4.2' stroke='%23ec6a5e' stroke-width='1.3' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1720; --panel: #161f2b; --panel-2: #1c2836; --border: #2a3949;
+        --text: #e7edf3; --muted: #93a4b7; --accent: #4f9cf9;
+        --good: #2fbf87; --warn: #e0a83a; --bad: #ec6a5e;
+        --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #1a2a3d, transparent), var(--bg); background-color: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 1140px; margin: 0 auto; padding: 48px 20px 64px; }
+      .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 600; }
+      h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.02em; }
+      .lede { color: var(--muted); max-width: 76ch; margin: 0; font-size: 16px; }
+      h2 { font-size: 18px; margin: 30px 0 4px; }
+      .section-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 12px; }
+      .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 15px 17px; }
+      .file { font-size: 14px; color: var(--muted); margin-top: 12px; } .file strong { color: #fff; }
+
+      .metrics { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 22px 0 4px; }
+      @media (max-width: 900px) { .metrics { grid-template-columns: repeat(4, 1fr); } }
+      @media (max-width: 520px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+      .metric { background: var(--panel); padding: 11px 12px; }
+      .metric dt { font-size: 10.5px; color: var(--muted); margin: 0 0 4px; }
+      .metric dd { margin: 0; font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .metric.good dd { color: var(--good); } .metric.warn dd { color: var(--warn); } .metric.bad dd { color: var(--bad); }
+
+      .controls { display: flex; flex-wrap: wrap; gap: 18px 22px; align-items: flex-end; margin: 22px 0 6px; }
+      .ctrl label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+      .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+      .seg button { background: transparent; color: var(--muted); border: none; padding: 7px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+      .seg button[aria-pressed="true"] { background: var(--accent); color: #05192f; }
+      select { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px 11px; font-size: 14px; min-width: 240px; }
+
+      .grid2 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; align-items: start; }
+      .grid2.even { grid-template-columns: 1fr 1fr; }
+      @media (max-width: 880px) { .grid2, .grid2.even { grid-template-columns: 1fr; } }
+
+      /* Seed panel */
+      .seed { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 12px; }
+      .seed .thumb { flex: none; width: 54px; height: 54px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--border); display: grid; place-items: center; font-weight: 800; color: var(--accent); font-size: 20px; }
+      .seed .meta h3 { margin: 0 0 3px; font-size: 16px; }
+      .seed .meta .sub { color: var(--muted); font-size: 12.5px; }
+      .badge { display: inline-block; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 7px; border-radius: 999px; margin-left: 6px; }
+      .badge.risk { color: var(--bad); background: rgba(236,106,94,.14); }
+
+      /* Recommendation slate */
+      .rec { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 10px 8px; border-radius: 9px; border: 1px solid var(--border); margin-bottom: 8px; cursor: pointer; background: var(--panel-2); transition: border-color .12s ease, transform .12s ease; }
+      .rec:hover { transform: translateY(-1px); border-color: rgba(79,156,249,.5); }
+      .rec[aria-selected="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+      .rec .rank { font-weight: 800; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+      .rec .title { font-weight: 600; font-size: 13.5px; }
+      .rec .tags { margin-top: 3px; display: flex; flex-wrap: wrap; gap: 4px; }
+      .rtag { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 999px; background: var(--bg); border: 1px solid var(--border); color: var(--muted); }
+      .rtag.complementary { color: var(--accent); border-color: rgba(79,156,249,.4); }
+      .rtag.behavior { color: var(--good); border-color: rgba(47,191,135,.4); }
+      .rtag.upsell { color: var(--warn); border-color: rgba(224,168,58,.4); }
+      .rec .right { text-align: right; font-variant-numeric: tabular-nums; }
+      .rec .score { font-weight: 800; color: var(--accent); font-size: 14px; }
+      .rec .price { color: var(--muted); font-size: 12px; }
+
+      /* Explainability */
+      .exp h3 { margin: 0 0 2px; font-size: 16px; }
+      .exp .sub { color: var(--muted); font-size: 12.5px; margin-bottom: 10px; }
+      .contrib { margin: 0 0 10px; }
+      .contrib .row { display: grid; grid-template-columns: 96px 1fr 40px; gap: 8px; align-items: center; font-size: 12px; margin-bottom: 5px; }
+      .contrib .bar { height: 9px; border-radius: 3px; background: var(--panel-2); overflow: hidden; }
+      .contrib .bar > span { display: block; height: 100%; background: var(--accent); }
+      .contrib .val { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+      .reasons { list-style: none; padding: 0; margin: 8px 0 0; }
+      .reasons li { font-size: 12.5px; padding: 5px 0; border-bottom: 1px solid var(--border); color: var(--muted); }
+      .reasons li:last-child { border-bottom: none; }
+      .reasons b { color: var(--text); }
+
+      /* Strategy breakdown */
+      .strat { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+      .strat th, .strat td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+      .strat th:first-child, .strat td:first-child { text-align: left; }
+      .strat th { color: var(--muted); font-size: 10.5px; text-transform: uppercase; }
+
+      /* Guardrails */
+      .gr { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+      .gr li { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+      .gr li:last-child { border-bottom: none; }
+      .gr .state { font-size: 11px; font-weight: 700; }
+      .gr .on { color: var(--good); } .gr .off { color: var(--muted); }
+      .gr .rm { font-variant-numeric: tabular-nums; color: var(--bad); font-weight: 700; }
+      .cov { margin-top: 10px; font-size: 13px; }
+      .cov b { color: var(--good); }
+
+      .footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+      .footer a { color: var(--accent); }
+      code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: .9em; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Growth Engineering Playbook · Wave 2</p>
+        <h1>What should we show next — and what should we never show?</h1>
+        <p class="lede">
+          A governed product recommendation engine for the fictional Northstar
+          Outfitters catalog. Legible strategies — complementary, bought-together,
+          upsell, similar, trending, same-brand — are blended by a merchandising
+          objective, then filtered by business guardrails: in-stock only, a margin
+          floor, return-risk suppression (fed by the support miner), and category
+          diversity. Every recommendation explains which rules fired and on what
+          evidence. Recommendations are a rules-and-governance problem, not a black
+          box. Deterministic, client-side, catalog + behaviour signals only.
+        </p>
+        <p class="file" id="fileInfo">Loading catalog &amp; behaviour data…</p>
+      </header>
+
+      <dl class="metrics" id="metrics"></dl>
+
+      <div class="controls">
+        <div class="ctrl">
+          <label for="seedSelect">Seed product</label>
+          <select id="seedSelect" aria-label="Select the product to recommend for"></select>
+        </div>
+        <div class="ctrl">
+          <label>Objective</label>
+          <div class="seg" data-control="objective">
+            <button type="button" data-value="balanced" aria-pressed="true">Balanced</button>
+            <button type="button" data-value="cross_sell">Cross-sell</button>
+            <button type="button" data-value="upsell">Upsell</button>
+            <button type="button" data-value="trending">Trending</button>
+            <button type="button" data-value="behavior">Bought together</button>
+          </div>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="ctrl">
+          <label>Margin floor</label>
+          <div class="seg" data-control="marginFloor">
+            <button type="button" data-value="off" aria-pressed="true">Off</button>
+            <button type="button" data-value="45%">45%</button>
+            <button type="button" data-value="50%">50%</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>In-stock only</label>
+          <div class="seg" data-control="inStockOnly">
+            <button type="button" data-value="on" aria-pressed="true">On</button>
+            <button type="button" data-value="off">Off</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Return-risk</label>
+          <div class="seg" data-control="suppressReturns">
+            <button type="button" data-value="on" aria-pressed="true">Suppress</button>
+            <button type="button" data-value="off">Allow</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Diversity</label>
+          <div class="seg" data-control="diversity">
+            <button type="button" data-value="on" aria-pressed="true">On</button>
+            <button type="button" data-value="off">Off</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Slots</label>
+          <div class="seg" data-control="slots">
+            <button type="button" data-value="4">4</button>
+            <button type="button" data-value="6" aria-pressed="true">6</button>
+            <button type="button" data-value="8">8</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <section>
+          <h2>Recommendation Slate</h2>
+          <p class="section-sub">Ranked by blended score. Click a recommendation for its full reasoning.</p>
+          <div class="panel">
+            <div class="seed" id="seedPanel"></div>
+            <div id="slate"></div>
+          </div>
+        </section>
+        <section>
+          <h2>Why This Recommendation</h2>
+          <p class="section-sub">Which strategies fired, their weighted contribution, and the evidence.</p>
+          <div class="panel exp" id="explain"></div>
+        </section>
+      </div>
+
+      <div class="grid2 even">
+        <section>
+          <h2>Strategy Contribution</h2>
+          <p class="section-sub">How the objective weights each strategy, and how many made the slate.</p>
+          <div class="panel"><table class="strat" id="breakdown"></table></div>
+        </section>
+        <section>
+          <h2>Guardrails &amp; Coverage</h2>
+          <p class="section-sub">The business rules governing the slate — and catalog-wide coverage.</p>
+          <div class="panel" id="guardrails"></div>
+        </section>
+      </div>
+
+      <footer class="footer">
+        <p>
+          Catalog &amp; behaviour data is the fictional <strong>Northstar Outfitters</strong>
+          store from this playbook's <code>shared-data/</code>. Co-signals come from
+          cart and event streams; return-risk is fed by the support-ticket miner.
+          Synthetic identifiers only — no real emails or personal data. Client-side,
+          no backend. Part of the
+          <a href="https://github.com/aaronwest-repo/growth-engineering-playbook" target="_blank" rel="noopener">Growth Engineering Playbook</a>.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

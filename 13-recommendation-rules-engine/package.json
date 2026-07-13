@@ -1,0 +1,13 @@
+{
+  "name": "recommendation-rules-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A governed product recommendation engine: legible strategies blended by objective, filtered by business guardrails (in-stock, margin floor, return-risk suppression, diversity), with per-recommendation explainability.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/rec.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
