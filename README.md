@@ -37,7 +37,7 @@ Wave 1 (experimentation, tracking, AI, automation, infrastructure) and Wave 2 (c
 | 13 | [`recommendation-rules-engine`](13-recommendation-rules-engine) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/13-recommendation-rules-engine/) | Governed product recommendations: blended strategies, business guardrails (in-stock, margin floor, return-risk suppression, diversity), and per-slot explainability |
 | 14 | [`free-shipping-threshold-calculator`](14-free-shipping-threshold-calculator) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/14-free-shipping-threshold-calculator/) | Margin-aware free-shipping threshold: models subsidy, basket nudging, and conversion lift; break-even analysis and revenue-vs-contribution truth-telling |
 | 15 | [`geo-content-checker`](15-geo-content-checker) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/15-geo-content-checker/) | Answer-engine (AEO) content audit: answer-first structure, extractable definitions, quotable sentences, schema hints, and the sentences an AI would quote |
-| 16 | [`schema-markup-generator`](16-schema-markup-generator) | Demo-ready | JSON-LD generator + validator (Product/Article/FAQ/Breadcrumb/Organization): required vs recommended fields, format/enum linting, and rich-result eligibility from clean or messy data |
+| 16 | [`schema-markup-generator`](16-schema-markup-generator) | [Live demo](https://aaronwest-repo.github.io/growth-engineering-playbook/16-schema-markup-generator/) | JSON-LD generator + validator (Product/Article/FAQ/Breadcrumb/Organization): required vs recommended fields, format/enum linting, and rich-result eligibility from clean or messy data |
 
 ## Run Philosophy
 
