@@ -1,3 +1,4 @@
+![Open-source tools for e-commerce growth](./open-source-tools-for-ecommerce-growth.png)
 # Growth Engineering Playbook
 
 Live, runnable e-commerce growth engineering demos: experimentation, tracking, AI workflows, automation, RAG, affiliate attribution, customer data, lifecycle growth, and static web infrastructure.
